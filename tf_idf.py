@@ -3,10 +3,14 @@ from pyspark import SparkContext, SparkConf
 from operator import add
 from pyspark.mllib.feature import HashingTF, IDF # TF-IDF specific functions 
 import sys
+import os
 
 sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
 rddNeighbourID = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/ANSWERS/6a_linkCoordinatesToNeighbourhood.csv', use_unicode = False).map(lambda x: x.split(","))
+
+# full path to the folder with the datasets
+folderPath = None
 
 fsListings = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_us.csv', use_unicode = False)
 listingHeader = fsListings.first()
@@ -52,10 +56,23 @@ heyNeighbor("West Queen Anne")
 
 
 
-def hello():
-    print("hello world")
+# Checks if path to folder provided exists
+def checkfolderPath(fn):
+    fn = sys.argv[1]
+    if os.path.exists(fn):
+        # folderPath exists
+        return True
+    else:
+        print(fn+ " does not exist. Retry with an existing path")
+        return False
 
-
+# check if folderpath ends on /
+def formatFolderPath(fn):
+    if fn[1].endswith('/'):
+        return fn
+    else:
+        print(fn[1]+'/')
+        return (fn[1]+'/')
 
 '''    ------------------ When running, under here  ---------------------	 '''
 
@@ -69,7 +86,11 @@ print("TF-IDF Assignment")
 file = sc.textFile("/home/tin/Documents/BIGData/SkeletonCodeFromJAN/application_scaffolding/python_project/data.txt").cache()
 print("File has " + str(file.count()) + " lines.")
 print("Passed arguments " + str(sys.argv))
-hello()
+if (checkfolderPath(sys.argv)):
+    folderPath=formatFolderPath(sys.argv)
+    rddNeighbourID = sc.textFile(folderPath+'/6a_linkCoordinatesToNeighbourhood.csv',  use_unicode = False).map(lambda x: x.split(","))
+
+
 
 
 # Don't know what this does yet. Taken from skeletonCode
