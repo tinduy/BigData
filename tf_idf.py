@@ -54,11 +54,11 @@ def heyListen(id):
 
 # filter for neighborhood
 def heyNeighbor(neighborhood):
-    neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: x[1].\
+    neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: (x[0], x[1].\
                                                     replace(",", "").\
                                                     replace("(", "").\
                                                     replace(")", "").\
-                                                    lower())
+                                                    lower()))
     return neighborhoodRDD
 
 #heyNeighbor("West Queen Anne")
