@@ -42,12 +42,15 @@ reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKe
 reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
 #print(reducedListingRDD.take(1))
 
+# filter for listing id
 def heyListen(id):
     idRDD = reducedListingRDD.filter(lambda line: id in line).map(lambda x: x[1])
     #print(idRDD.collect())
+    
 
 #heyListen("1513847")
 
+# filter for neighborhood
 def heyNeighbor(neighborhood):
     neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: x[1])
     print(neighborhoodRDD.collect())
@@ -82,9 +85,11 @@ def flagPassing(args):
         if args[arg]=='-l':
             listingID = args[arg+1]
             print('Flag -l accepted. Checking listingID: '+args[arg+1])
+            heyListen(listingID)
         elif args[arg] == "-n":
             neighbor = args[arg+1]
             print('Flag -n accepted. Checking neighborhood: '+neighbor)
+            heyNeighbor(neighbor)
 
 
 
