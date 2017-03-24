@@ -23,8 +23,10 @@ def getIndexValue(name):
 mappedListing = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("description")]))
 joinedRDD = rddNeighbourID.join(mappedListing)
 #print(joinedRDD.take(5))
-reducedRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKey(add)
-print(reducedRDD.take(1))
+reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKey(add)
+print(reducedNeighbourhoodRDD.take(1))
+reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
+print(reducedListingRDD.take(1))
 
 # Skeleton code for standalone application
 '''
