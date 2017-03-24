@@ -6,7 +6,7 @@ import sys
 
 sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
-rddNeighbourID = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/ANSWERS/6a_linkCoordinatesToNeighbourhood.csv', use_unicode = False).map(lambda x: x.split(","))
+rddNeighbourID = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_ids_with_neighborhoods', use_unicode = False).map(lambda x: x.split(","))
 
 fsListings = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_us.csv', use_unicode = False)
 listingHeader = fsListings.first()
