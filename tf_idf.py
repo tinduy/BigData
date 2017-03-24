@@ -7,7 +7,7 @@ import os
 
 sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
-rddNeighbourID = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_ids_with_neighborhoods.tsv', use_unicode = False).map(lambda x: x.split(","))
+rddNeighbourID = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_ids_with_neighborhoods.tsv', use_unicode = False).map(lambda x: x.split("\t"))
 
 # full path to the folder with the datasets
 folderPath = None
@@ -44,20 +44,35 @@ reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
 
 # filter for listing id
 def heyListen(id):
-    idRDD = reducedListingRDD.filter(lambda line: id in line).map(lambda x: x[1])
-    #print(idRDD.collect())
-    
+    idRDD = reducedListingRDD.filter(lambda line: id in line).map(lambda x: (x[0], x[1].\
+                                    replace(",","").\
+                                    replace("(","").\
+                                    replace(")","").\
+                                    lower()))
+    return idRDD
+
 
 #heyListen("1513847")
 
 # filter for neighborhood
 def heyNeighbor(neighborhood):
-    neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: x[1])
-    print(neighborhoodRDD.collect())
+    neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: x[1].\
+                                                    replace(",", "").\
+                                                    replace("(", "").\
+                                                    replace(")", "").\
+                                                    lower())
+    return neighborhoodRDD
 
 #heyNeighbor("West Queen Anne")
 
-
+def descriptionInTable(table):
+    descriptionDict = {}
+    for i in range(0, table.count()):
+        descriptionDict[table.collect()[i][0]] = table.\
+        flatMap(lambda x: x[1].strip().split()).\
+        collect()
+    print(descriptionDict)
+    return descriptionDict
 
 # Checks if path to folder provided exists
 def checkfolderPath(fn):
@@ -85,11 +100,11 @@ def flagPassing(args):
         if args[arg]=='-l':
             listingID = args[arg+1]
             print('Flag -l accepted. Checking listingID: '+args[arg+1])
-            heyListen(listingID)
-        elif args[arg] == "-n":
+            descriptionInTable(heyListen(listingID))
+        elif args[arg] == '-n':
             neighbor = args[arg+1]
             print('Flag -n accepted. Checking neighborhood: '+neighbor)
-            heyNeighbor(neighbor)
+            descriptionInTable(heyNeighbor(neighbor))
 
 
 
@@ -108,7 +123,7 @@ print("Passed arguments " + str(sys.argv))
 if (checkfolderPath(sys.argv)):
     folderPath=formatFolderPath(sys.argv)
     flagPassing(sys.argv)
-    rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv',  use_unicode = False).map(lambda x: x.split(","))
+    rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv',  use_unicode = False).map(lambda x: x.split("\t"))
 
 
 
