@@ -2,6 +2,7 @@ from __future__ import print_function
 from pyspark import SparkContext, SparkConf
 from operator import add
 from pyspark.mllib.feature import HashingTF, IDF # TF-IDF specific functions 
+import sys
 
 sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
@@ -20,6 +21,15 @@ for i in range(len(header2)):
 def getIndexValue(name):
     return dict[name]
 
+
+
+
+'''    ------------------ Functions under here  ---------------------	 '''
+
+'''
+Test built-in TF-IDF from pyspark
+'''
+
 mappedListing = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("description")]))
 joinedRDD = rddNeighbourID.join(mappedListing)
 #print(joinedRDD.take(5))
@@ -28,21 +38,27 @@ print(reducedNeighbourhoodRDD.take(1))
 reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
 print(reducedListingRDD.take(1))
 
+
+
+def hello():
+    print("hello world")
+
+
+
+'''    ------------------ When running, under here  ---------------------	 '''
+
 # Skeleton code for standalone application
 '''
     # need to build all dependencies and modules
-    # accepts a full path to the folder
-    # with the datasets, a flag marking whether a listing (-l) or a neighborhood
-    # (-n) should be analysed and listing id or neighborhood name on the input.
+    # accepts a full path to the folder with the datasets,
+    # a flag marking whether a listing (-l) or a neighborhood (-n) should be analysed and listing id or neighborhood name on the input.
 '''
 print("TF-IDF Assignment")
-#file = sc.textFile("/home/tin/Documents/BIGData/SkeletonCodeFromJAN/application_scaffolding/python_project/data.txt").cache()
-#print("File has " + str(file.count()) + " lines.")
-#print("Passed arguments " + str(sys.argv))
+file = sc.textFile("/home/tin/Documents/BIGData/SkeletonCodeFromJAN/application_scaffolding/python_project/data.txt").cache()
+print("File has " + str(file.count()) + " lines.")
+print("Passed arguments " + str(sys.argv))
+hello()
 
-'''
-Test built-in TF-IDF from pyspark
-'''
 
 # Don't know what this does yet. Taken from skeletonCode
-#sc.stop()
+sc.stop()
