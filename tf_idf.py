@@ -98,7 +98,8 @@ def flagPassing(args):
         if args[arg]=='-l':
             listingID = args[arg+1]
             print('Flag -l accepted. Checking listingID: '+args[arg+1])
-            descriptionInTable(heyListen(listingID))
+            listingAndDescription = descriptionInTable(heyListen(listingID))
+            tfIDF(listingAndDescription[listingID])
         elif args[arg] == '-n':
             neighbor = args[arg+1]
             print('Flag -n accepted. Checking neighborhood: '+neighbor)
@@ -110,8 +111,9 @@ Test built-in TF-IDF from pyspark
 '''
 def tfIDF(rdd):
     # Read description words as TF vectors
-    tf = rdd.HashingTF()
-    tfVectors = tf.transform(rdd).cache()
+    tf = HashingTF()
+    tfVectors = tf.transform(rdd)
+    print(tfVectors)
     # Compute the IDF, then the TF-IDF vectors
     idf = IDF()
     idfModel = idf.fit(tfVectors)
@@ -135,8 +137,6 @@ if (checkfolderPath(sys.argv)):
     folderPath=formatFolderPath(sys.argv)
     flagPassing(sys.argv)
     rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv',  use_unicode = False).map(lambda x: x.split("\t"))
-
-
 
 
 # Don't know what this does yet. Taken from skeletonCode
