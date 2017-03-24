@@ -28,12 +28,6 @@ def getIndexValue(name):
 
 
 
-'''    ------------------ Functions under here  ---------------------	 '''
-
-'''
-Test built-in TF-IDF from pyspark
-'''
-
 mappedListing = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("description")]))
 joinedRDD = rddNeighbourID.join(mappedListing)
 #print(joinedRDD.take(5))
@@ -42,6 +36,10 @@ reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKe
 reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
 #print(reducedListingRDD.take(1))
 
+
+
+
+'''    ------------------ Functions under here  ---------------------	 '''
 # filter for listing id
 def heyListen(id):
     idRDD = reducedListingRDD.filter(lambda line: id in line).map(lambda x: (x[0], x[1].\
@@ -106,6 +104,19 @@ def flagPassing(args):
             print('Flag -n accepted. Checking neighborhood: '+neighbor)
             descriptionInTable(heyNeighbor(neighbor))
 
+######################### Task 1.1.1 TF-IDF
+'''
+Test built-in TF-IDF from pyspark
+'''
+def tfIDF(rdd):
+    # Read description words as TF vectors
+    tf = rdd.HashingTF()
+    tfVectors = tf.transform(rdd).cache()
+    # Compute the IDF, then the TF-IDF vectors
+    idf = IDF()
+    idfModel = idf.fit(tfVectors)
+    tfIdfVectors = idfModel.transform(tfVectors)
+    
 
 
 '''    ------------------ When running, under here  ---------------------	 '''
