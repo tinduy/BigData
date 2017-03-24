@@ -72,6 +72,14 @@ def descriptionInTable(table):
     print(descriptionDict)
     return descriptionDict
 
+def descriptionInTable2(table):
+    hello = table.\
+        flatMap(lambda x: x[1].strip().split()).\
+        map(lambda x: (x, int(1))).\
+        reduceByKey(add)
+    print(hello.collect())
+    return hello
+
 # Checks if path to folder provided exists
 def checkfolderPath(fn):
     fn = sys.argv[1]
@@ -98,12 +106,12 @@ def flagPassing(args):
         if args[arg]=='-l':
             listingID = args[arg+1]
             print('Flag -l accepted. Checking listingID: '+args[arg+1])
-            listingAndDescription = descriptionInTable(heyListen(listingID))
-            tfIDF(listingAndDescription[listingID])
+            listingAndDescription = descriptionInTable2(heyListen(listingID))
+            #tfIDF(listingAndDescription[listingID])
         elif args[arg] == '-n':
             neighbor = args[arg+1]
             print('Flag -n accepted. Checking neighborhood: '+neighbor)
-            descriptionInTable(heyNeighbor(neighbor))
+            descriptionInTable2(heyNeighbor(neighbor))
 
 ######################### Task 1.1.1 TF-IDF
 '''
