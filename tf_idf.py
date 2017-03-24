@@ -52,7 +52,7 @@ def heyNeighbor(neighborhood):
     neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: x[1])
     print(neighborhoodRDD.collect())
 
-heyNeighbor("West Queen Anne")
+#heyNeighbor("West Queen Anne")
 
 
 
@@ -74,6 +74,18 @@ def formatFolderPath(fn):
         print(fn[1]+'/')
         return (fn[1]+'/')
 
+# Checking flags, 
+#   listing (-l) or a neighborhood (-n) 
+#   should be analysed and listing id or neighborhood name on the input.
+def flagPassing(args):
+    for arg in range(len(args)):
+        if args[arg]=='-l':
+            listingID = args[arg+1]
+            print('Flag -l accepted. Checking listingID: '+args[arg+1])
+
+
+
+
 '''    ------------------ When running, under here  ---------------------	 '''
 
 # Skeleton code for standalone application
@@ -88,6 +100,7 @@ print("File has " + str(file.count()) + " lines.")
 print("Passed arguments " + str(sys.argv))
 if (checkfolderPath(sys.argv)):
     folderPath=formatFolderPath(sys.argv)
+    flagPassing(sys.argv)
     rddNeighbourID = sc.textFile(folderPath+'/6a_linkCoordinatesToNeighbourhood.csv',  use_unicode = False).map(lambda x: x.split(","))
 
 
