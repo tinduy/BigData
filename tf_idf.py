@@ -69,7 +69,7 @@ def checkfolderPath(fn):
 # check if folderpath ends on /
 def formatFolderPath(fn):
     if fn[1].endswith('/'):
-        return fn
+        return fn[1]
     else:
         print(fn[1]+'/')
         return (fn[1]+'/')
@@ -82,6 +82,7 @@ def flagPassing(args):
         if args[arg]=='-l':
             listingID = args[arg+1]
             print('Flag -l accepted. Checking listingID: '+args[arg+1])
+            
 
 
 
@@ -95,7 +96,7 @@ def flagPassing(args):
     # a flag marking whether a listing (-l) or a neighborhood (-n) should be analysed and listing id or neighborhood name on the input.
 '''
 print("TF-IDF Assignment")
-file = sc.textFile("/home/tin/Documents/BIGData/SkeletonCodeFromJAN/application_scaffolding/python_project/data.txt").cache()
+#file = sc.textFile("/home/tin/Documents/BIGData/SkeletonCodeFromJAN/application_scaffolding/python_project/data.txt").cache()
 print("File has " + str(file.count()) + " lines.")
 print("Passed arguments " + str(sys.argv))
 if (checkfolderPath(sys.argv)):
