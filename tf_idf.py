@@ -7,7 +7,7 @@ import os
 
 sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
-rddNeighbourID = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/ANSWERS/6a_linkCoordinatesToNeighbourhood.csv', use_unicode = False).map(lambda x: x.split(","))
+rddNeighbourID = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_ids_with_neighborhoods.tsv', use_unicode = False).map(lambda x: x.split(","))
 
 # full path to the folder with the datasets
 folderPath = None
@@ -42,12 +42,15 @@ reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKe
 reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
 #print(reducedListingRDD.take(1))
 
+# filter for listing id
 def heyListen(id):
     idRDD = reducedListingRDD.filter(lambda line: id in line).map(lambda x: x[1])
     #print(idRDD.collect())
+    
 
 #heyListen("1513847")
 
+# filter for neighborhood
 def heyNeighbor(neighborhood):
     neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: x[1])
     print(neighborhoodRDD.collect())
@@ -82,8 +85,11 @@ def flagPassing(args):
         if args[arg]=='-l':
             listingID = args[arg+1]
             print('Flag -l accepted. Checking listingID: '+args[arg+1])
-            
-
+            heyListen(listingID)
+        elif args[arg] == "-n":
+            neighbor = args[arg+1]
+            print('Flag -n accepted. Checking neighborhood: '+neighbor)
+            heyNeighbor(neighbor)
 
 
 
@@ -97,12 +103,12 @@ def flagPassing(args):
 '''
 print("TF-IDF Assignment")
 #file = sc.textFile("/home/tin/Documents/BIGData/SkeletonCodeFromJAN/application_scaffolding/python_project/data.txt").cache()
-print("File has " + str(file.count()) + " lines.")
+#print("File has " + str(file.count()) + " lines.")
 print("Passed arguments " + str(sys.argv))
 if (checkfolderPath(sys.argv)):
     folderPath=formatFolderPath(sys.argv)
     flagPassing(sys.argv)
-    rddNeighbourID = sc.textFile(folderPath+'/6a_linkCoordinatesToNeighbourhood.csv',  use_unicode = False).map(lambda x: x.split(","))
+    rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv',  use_unicode = False).map(lambda x: x.split(","))
 
 
 
