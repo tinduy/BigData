@@ -34,9 +34,21 @@ mappedListing = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getInd
 joinedRDD = rddNeighbourID.join(mappedListing)
 #print(joinedRDD.take(5))
 reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKey(add)
-print(reducedNeighbourhoodRDD.take(1))
+#print(reducedNeighbourhoodRDD.take(1))
 reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
-print(reducedListingRDD.take(1))
+#print(reducedListingRDD.take(1))
+
+def heyListen(id):
+    idRDD = reducedListingRDD.filter(lambda line: id in line).map(lambda x: x[1])
+    #print(idRDD.collect())
+
+#heyListen("1513847")
+
+def heyNeighbor(neighborhood):
+    neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: x[1])
+    print(neighborhoodRDD.collect())
+
+heyNeighbor("West Queen Anne")
 
 
 
