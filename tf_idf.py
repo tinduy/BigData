@@ -45,7 +45,13 @@ def heyListen(id):
     idRDD = reducedListingRDD.filter(lambda line: id in line).map(lambda x: (x[0], x[1].\
                                     replace(",","").\
                                     replace("(","").\
-                                    replace(")","").\
+                                    replace(")",""). \
+                                    replace("*", ""). \
+                                    replace(".", " "). \
+                                    replace("-", ""). \
+                                    replace("!", ""). \
+                                    replace("+", ""). \
+                                    replace("/", " ").\
                                     lower()))
     return idRDD
 
@@ -57,7 +63,13 @@ def heyNeighbor(neighborhood):
     neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: (x[0], x[1].\
                                                     replace(",", "").\
                                                     replace("(", "").\
-                                                    replace(")", "").\
+                                                    replace(")", ""). \
+                                                    replace("*", ""). \
+                                                    replace(".", " "). \
+                                                    replace("-", ""). \
+                                                    replace("!", ""). \
+                                                    replace("+", ""). \
+                                                    replace("/", " ").\
                                                     lower()))
     return neighborhoodRDD
 
@@ -72,12 +84,12 @@ def descriptionInTable(table):
     print(descriptionDict)
     return descriptionDict
 
-def descriptionInTable2(table):
+def tf(table):
     hello = table.\
         flatMap(lambda x: x[1].strip().split()).\
         map(lambda x: (x, int(1))).\
         reduceByKey(add)
-    print(hello.collect())
+    #print(hello.collect())
     return hello
 
 # Checks if path to folder provided exists
@@ -106,7 +118,7 @@ def flagPassing(args):
         if args[arg]=='-l':
             listingID = args[arg+1]
             print('Flag -l accepted. Checking listingID: '+args[arg+1])
-            listingAndDescription = descriptionInTable2(heyListen(listingID))
+            listingAndDescription = idf(tf(heyListen(listingID)))
             #tfIDF(listingAndDescription[listingID])
         elif args[arg] == '-n':
             neighbor = args[arg+1]
@@ -130,7 +142,30 @@ def tfIDF(rdd):
     tfIdfVectors = idfModel.transform(tfVectors)
     print(tfIdfVectors.collect())
     
-
+def idf(words):
+    numberOfDocuments = reducedListingRDD.count()
+    weNeedThis = mappedListing.map(lambda x: (x[0], x[1].\
+                                replace(",", "").\
+                                replace("(", "").\
+                                replace(")", "").\
+                                replace("*", "").\
+                                replace(".", " ").\
+                                replace("-", " ").\
+                                replace("!", "").\
+                                replace("+", " ").\
+                                replace("/", " ").\
+                                lower()))
+                                #map(lambda x: x.strip().split())))
+    #print(weNeedThis.take(20))
+    detteErBra = {}
+    for i in range(0, words.count()):
+        word = words.collect()[i][0]
+        print(word)
+        detteErBra[word] = weNeedThis.map(lambda x: x[1]).filter(lambda line: word in line).count()
+        print(detteErBra)
+    print(detteErBra)
+    #ThisIsTheJoin = words.join(weNeedThis)
+    #print(ThisIsTheJoin.take(10))
 
 '''    ------------------ When running, under here  ---------------------	 '''
 
