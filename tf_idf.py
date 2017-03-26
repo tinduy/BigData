@@ -4,6 +4,7 @@ from operator import add
 from pyspark.mllib.feature import HashingTF, IDF # TF-IDF specific functions 
 import sys
 import os
+import operator
 
 sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
@@ -84,14 +85,6 @@ def descriptionInTable(table):
     print(descriptionDict)
     return descriptionDict
 
-def tf(table):
-    hello = table.\
-        flatMap(lambda x: x[1].strip().split()).\
-        map(lambda x: (x, int(1))).\
-        reduceByKey(add)
-    #print(hello.collect())
-    return hello
-
 # Checks if path to folder provided exists
 def checkfolderPath(fn):
     fn = sys.argv[1]
@@ -123,7 +116,7 @@ def flagPassing(args):
         elif args[arg] == '-n':
             neighbor = args[arg+1]
             print('Flag -n accepted. Checking neighborhood: '+neighbor)
-            descriptionInTable2(heyNeighbor(neighbor))
+            neighborAndDescription = idf(tf(heyNeighbor(neighbor)))
 
 ######################### Task 1.1.1 TF-IDF
 '''
@@ -141,7 +134,17 @@ def tfIDF(rdd):
     idfModel = idf.fit(tfVectors)
     tfIdfVectors = idfModel.transform(tfVectors)
     print(tfIdfVectors.collect())
-    
+
+def tf(table):
+    hello = table.\
+        flatMap(lambda x: x[1].strip().split()).\
+        map(lambda x: (x, int(1))).\
+        reduceByKey(add)
+    numberOfTermsInDocument = hello.count()
+    print(numberOfTermsInDocument)
+    haha = hello.map(lambda x: (x[0], float(float(x[1])/float(numberOfTermsInDocument))))
+    return haha
+
 def idf(words):
     numberOfDocuments = reducedListingRDD.count()
     weNeedThis = mappedListing.map(lambda x: (x[0], x[1].\
@@ -155,17 +158,22 @@ def idf(words):
                                 replace("+", " ").\
                                 replace("/", " ").\
                                 lower()))
-                                #map(lambda x: x.strip().split())))
-    #print(weNeedThis.take(20))
     detteErBra = {}
     for i in range(0, words.count()):
         word = words.collect()[i][0]
-        print(word)
-        detteErBra[word] = weNeedThis.map(lambda x: x[1]).filter(lambda line: word in line).count()
-        print(detteErBra)
+        if(weNeedThis.map(lambda x: x[1]).filter(lambda line: word in line).count() > 0):
+            detteErBra[word] = float(float(numberOfDocuments)/float(weNeedThis.map(lambda x: x[1]).filter(lambda line: word in line).count()))
     print(detteErBra)
-    #ThisIsTheJoin = words.join(weNeedThis)
-    #print(ThisIsTheJoin.take(10))
+    #detteErBra = {'just': 4.470266906375328, 'deck': 16.387579214195185, 'queen': 3.648157553185486, 'four': 25.04804339403332}
+    wordsDict = words.collect()
+    print(wordsDict)
+    tfidfDict = {}
+    for i in range(words.count()):
+        for word, idf in detteErBra.iteritems():
+            if (wordsDict[i][0] == word):
+                tfidfDict[word] = wordsDict[i][1] * idf
+    #print(tfidfDict)
+    print(sorted(tfidfDict.items(), key=operator.itemgetter(1), reverse = True))
 
 '''    ------------------ When running, under here  ---------------------	 '''
 
