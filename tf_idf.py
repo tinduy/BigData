@@ -9,12 +9,12 @@ from time import time
 
 sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
-rddNeighbourID = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_ids_with_neighborhoods.tsv', use_unicode = False).map(lambda x: x.split("\t"))
+rddNeighbourID = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_ids_with_neighborhoods.tsv', use_unicode = True).map(lambda x: x.split("\t"))
 
 # full path to the folder with the datasets
 folderPath = None
 
-fsListings = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_us.csv', use_unicode = False)
+fsListings = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_us.csv', use_unicode = True)
 listingHeader = fsListings.first()
 listingsFiltered = fsListings.filter(lambda x: x!=listingHeader).map(lambda x: x.split("\t"))
 
@@ -53,10 +53,12 @@ def heyListen(id):
                                     replace("-", "").\
                                     replace("!", "").\
                                     replace("+", "").\
-                                    replace("/", " ").\
+                                    replace("/", " "). \
+                                    replace("\\", " ").\
                                     replace("=", "").\
                                     replace("{", "").\
-                                    replace("}", "").\
+                                    replace("}", ""). \
+                                    encode('utf-8'). \
                                     lower()))
     return idRDD
 
@@ -74,10 +76,12 @@ def heyNeighbor(neighborhood):
                                                     replace("-", ""). \
                                                     replace("!", ""). \
                                                     replace("+", ""). \
-                                                    replace("/", " ").\
+                                                    replace("/", " "). \
+                                                    replace("\\", " ").\
                                                     replace("=", "").\
                                                     replace("{", "").\
-                                                    replace("}", "").\
+                                                    replace("}", ""). \
+                                                    encode('utf-8').\
                                                     lower()))
     return neighborhoodRDD
 
@@ -156,58 +160,6 @@ def tf(table):
     haha = hello.map(lambda x: (x[0], float(float(x[1])/float(numberOfTermsInDocument))))
     return haha
 
-def idf(words, which):
-    if (which == 1):
-        numberOfDocuments = reducedListingRDD.count()
-        weNeedThis = mappedListing.map(lambda x: (x[0], x[1].\
-                                    replace(",", "").\
-                                    replace("(", "").\
-                                    replace(")", "").\
-                                    replace("*", "").\
-                                    replace(".", " ").\
-                                    replace("-", " ").\
-                                    replace("!", "").\
-                                    replace("+", " ").\
-                                    replace("/", " ").\
-                                    replace("'s", " ").\
-                                    replace("=", " ").\
-                                    replace("{", " ").\
-                                    replace("}", " ").\
-                                    lower()))
-    elif (which == 2):
-        numberOfDocuments = reducedNeighbourhoodRDD.count()
-        weNeedThis = reducedNeighbourhoodRDD.map(lambda x: (x[0], x[1].\
-                                                            replace(",", " ").\
-                                                            replace("(", " ").\
-                                                            replace(")", " ").\
-                                                            replace("*", " ").\
-                                                            replace(".", " ").\
-                                                            replace("-", " ").\
-                                                            replace("!", " ").\
-                                                            replace("+", " ").\
-                                                            replace("/", " ").\
-                                                            replace("'s", " ").\
-                                                            replace("=", " ").\
-                                                            replace("{", " ").\
-                                                            replace("}", " ").\
-                                                            lower()))
-    detteErBra = {}
-    for i in range(0, words.count()):
-        word = words.collect()[i][0]
-        if(weNeedThis.map(lambda x: x[1]).filter(lambda line: word in line).count() > 0):
-            detteErBra[word] = float(float(numberOfDocuments)/float(weNeedThis.map(lambda x: x[1]).filter(lambda line: word in line).count()))
-    #print(detteErBra)
-    #detteErBra = {'just': 4.470266906375328, 'deck': 16.387579214195185, 'queen': 3.648157553185486, 'four': 25.04804339403332}
-    wordsDict = words.collect()
-    #print(wordsDict)
-    tfidfDict = {}
-    for i in range(words.count()):
-        for word, idf in detteErBra.iteritems():
-            if (wordsDict[i][0] == word):
-                tfidfDict[word] = wordsDict[i][1] * idf
-    #print(tfidfDict)
-    print(sorted(tfidfDict.items(), key=operator.itemgetter(1), reverse = True))
-
 def idf2(words, which):
     if (which == 1):
         numberOfDocuments = reducedListingRDD.count()
@@ -221,10 +173,12 @@ def idf2(words, which):
                                     replace("!", "").\
                                     replace("+", " ").\
                                     replace("/", " ").\
+                                    replace("\\", " ").\
                                     replace("'s", " ").\
                                     replace("=", " ").\
                                     replace("{", " ").\
-                                    replace("}", " ").\
+                                    replace("}", " "). \
+                                    encode('utf-8').\
                                     lower()))
     elif (which == 2):
         numberOfDocuments = reducedNeighbourhoodRDD.count()
@@ -237,17 +191,26 @@ def idf2(words, which):
                                                             replace("-", " ").\
                                                             replace("!", " ").\
                                                             replace("+", " ").\
-                                                            replace("/", " ").\
+                                                            replace("/", " "). \
+                                                            replace("\\", " "). \
                                                             replace("'s", " ").\
                                                             replace("=", " ").\
                                                             replace("{", " ").\
-                                                            replace("}", " ").\
+                                                            replace("}", " "). \
+                                                            encode('utf-8').\
                                                             lower()))
-    detteErBra = weNeedThis.map(lambda x: (x[0], x[1].strip().split())).flatMapValues(lambda x: x)#.distinct().map(lambda x: (x[0], int(1))).reduceByKey(add)
-    print(detteErBra.count())
-    print(detteErBra.distinct().take(100))
-    #joinRDD = words.join(detteErBra)
-    #print(joinRDD.take(5))
+    detteErBra = weNeedThis.map(lambda x: (x[0], x[1].strip().split())).\
+                                    flatMapValues(lambda x: x).\
+                                    distinct().\
+                                    map(lambda x: (x[1], int(1))).\
+                                    reduceByKey(add).\
+                                    map(lambda x: (x[0], float(float(numberOfDocuments)/float(x[1]))))
+    joinRDD = words.join(detteErBra).\
+                map(lambda x: (x[0], x[1][0] * x[1][1])).\
+                map(lambda x: (x[1], x[0])).\
+                sortByKey(0,1).\
+                map(lambda x: (x[1], x[0]))
+    print(joinRDD.collect())
 
 
 '''    ------------------ When running, under here  ---------------------	 '''
