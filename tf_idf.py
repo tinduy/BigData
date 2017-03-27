@@ -79,7 +79,6 @@ def heyNeighbor(neighborhood):
                                                     replace("{", "").\
                                                     replace("}", "").\
                                                     lower()))
-    print(neighborhoodRDD.collect())
     return neighborhoodRDD
 
 #heyNeighbor("West Queen Anne")
@@ -120,14 +119,14 @@ def flagPassing(args):
             listingID = args[arg+1]
             print('Flag -l accepted. Checking listingID: '+args[arg+1])
             start_time = time()
-            idf(tf(heyListen(listingID)), 1)
+            idf2(tf(heyListen(listingID)), 1)
             print("Checking listing Elapsed time: " + str(time() - start_time))
             #tfIDF(listingAndDescription[listingID])
         elif args[arg] == '-n':
             neighbor = args[arg+1]
             print('Flag -n accepted. Checking neighborhood: '+neighbor)
             start_time = time()
-            idf(tf(heyNeighbor(neighbor)), 2)
+            idf2(tf(heyNeighbor(neighbor)), 2)
             print("Checking neighbourhood Elapsed time: " + str(time() - start_time))
 
 ######################### Task 1.1.1 TF-IDF
@@ -208,6 +207,47 @@ def idf(words, which):
                 tfidfDict[word] = wordsDict[i][1] * idf
     #print(tfidfDict)
     print(sorted(tfidfDict.items(), key=operator.itemgetter(1), reverse = True))
+
+def idf2(words, which):
+    if (which == 1):
+        numberOfDocuments = reducedListingRDD.count()
+        weNeedThis = mappedListing.map(lambda x: (x[0], x[1].\
+                                    replace(",", "").\
+                                    replace("(", "").\
+                                    replace(")", "").\
+                                    replace("*", "").\
+                                    replace(".", " ").\
+                                    replace("-", " ").\
+                                    replace("!", "").\
+                                    replace("+", " ").\
+                                    replace("/", " ").\
+                                    replace("'s", " ").\
+                                    replace("=", " ").\
+                                    replace("{", " ").\
+                                    replace("}", " ").\
+                                    lower()))
+    elif (which == 2):
+        numberOfDocuments = reducedNeighbourhoodRDD.count()
+        weNeedThis = reducedNeighbourhoodRDD.map(lambda x: (x[0], x[1].\
+                                                            replace(",", " ").\
+                                                            replace("(", " ").\
+                                                            replace(")", " ").\
+                                                            replace("*", " ").\
+                                                            replace(".", " ").\
+                                                            replace("-", " ").\
+                                                            replace("!", " ").\
+                                                            replace("+", " ").\
+                                                            replace("/", " ").\
+                                                            replace("'s", " ").\
+                                                            replace("=", " ").\
+                                                            replace("{", " ").\
+                                                            replace("}", " ").\
+                                                            lower()))
+    detteErBra = weNeedThis.map(lambda x: (x[0], x[1].strip().split())).flatMapValues(lambda x: x)#.distinct().map(lambda x: (x[0], int(1))).reduceByKey(add)
+    print(detteErBra.count())
+    print(detteErBra.distinct().take(100))
+    #joinRDD = words.join(detteErBra)
+    #print(joinRDD.take(5))
 
 
 '''    ------------------ When running, under here  ---------------------	 '''
