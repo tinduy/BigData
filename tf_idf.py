@@ -5,6 +5,7 @@ from pyspark.mllib.feature import HashingTF, IDF # TF-IDF specific functions
 import sys
 import os
 import operator
+from time import time
 
 sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
@@ -33,7 +34,7 @@ mappedListing = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getInd
 joinedRDD = rddNeighbourID.join(mappedListing)
 #print(joinedRDD.take(5))
 reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKey(add)
-#print(reducedNeighbourhoodRDD.take(1))
+#print(reducedNeighbourhoodRDD.take(2))
 reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
 #print(reducedListingRDD.take(1))
 
@@ -46,13 +47,16 @@ def heyListen(id):
     idRDD = reducedListingRDD.filter(lambda line: id in line).map(lambda x: (x[0], x[1].\
                                     replace(",","").\
                                     replace("(","").\
-                                    replace(")",""). \
-                                    replace("*", ""). \
-                                    replace(".", " "). \
-                                    replace("-", ""). \
-                                    replace("!", ""). \
-                                    replace("+", ""). \
+                                    replace(")","").\
+                                    replace("*", "").\
+                                    replace(".", " ").\
+                                    replace("-", "").\
+                                    replace("!", "").\
+                                    replace("+", "").\
                                     replace("/", " ").\
+                                    replace("=", "").\
+                                    replace("{", "").\
+                                    replace("}", "").\
                                     lower()))
     return idRDD
 
@@ -71,7 +75,11 @@ def heyNeighbor(neighborhood):
                                                     replace("!", ""). \
                                                     replace("+", ""). \
                                                     replace("/", " ").\
+                                                    replace("=", "").\
+                                                    replace("{", "").\
+                                                    replace("}", "").\
                                                     lower()))
+    print(neighborhoodRDD.collect())
     return neighborhoodRDD
 
 #heyNeighbor("West Queen Anne")
@@ -111,12 +119,16 @@ def flagPassing(args):
         if args[arg]=='-l':
             listingID = args[arg+1]
             print('Flag -l accepted. Checking listingID: '+args[arg+1])
-            listingAndDescription = idf(tf(heyListen(listingID)))
+            start_time = time()
+            idf(tf(heyListen(listingID)), 1)
+            print("Checking listing Elapsed time: " + str(time() - start_time))
             #tfIDF(listingAndDescription[listingID])
         elif args[arg] == '-n':
             neighbor = args[arg+1]
             print('Flag -n accepted. Checking neighborhood: '+neighbor)
-            neighborAndDescription = idf(tf(heyNeighbor(neighbor)))
+            start_time = time()
+            idf(tf(heyNeighbor(neighbor)), 2)
+            print("Checking neighbourhood Elapsed time: " + str(time() - start_time))
 
 ######################### Task 1.1.1 TF-IDF
 '''
@@ -145,28 +157,50 @@ def tf(table):
     haha = hello.map(lambda x: (x[0], float(float(x[1])/float(numberOfTermsInDocument))))
     return haha
 
-def idf(words):
-    numberOfDocuments = reducedListingRDD.count()
-    weNeedThis = mappedListing.map(lambda x: (x[0], x[1].\
-                                replace(",", "").\
-                                replace("(", "").\
-                                replace(")", "").\
-                                replace("*", "").\
-                                replace(".", " ").\
-                                replace("-", " ").\
-                                replace("!", "").\
-                                replace("+", " ").\
-                                replace("/", " ").\
-                                lower()))
+def idf(words, which):
+    if (which == 1):
+        numberOfDocuments = reducedListingRDD.count()
+        weNeedThis = mappedListing.map(lambda x: (x[0], x[1].\
+                                    replace(",", "").\
+                                    replace("(", "").\
+                                    replace(")", "").\
+                                    replace("*", "").\
+                                    replace(".", " ").\
+                                    replace("-", " ").\
+                                    replace("!", "").\
+                                    replace("+", " ").\
+                                    replace("/", " ").\
+                                    replace("'s", " ").\
+                                    replace("=", " ").\
+                                    replace("{", " ").\
+                                    replace("}", " ").\
+                                    lower()))
+    elif (which == 2):
+        numberOfDocuments = reducedNeighbourhoodRDD.count()
+        weNeedThis = reducedNeighbourhoodRDD.map(lambda x: (x[0], x[1].\
+                                                            replace(",", " ").\
+                                                            replace("(", " ").\
+                                                            replace(")", " ").\
+                                                            replace("*", " ").\
+                                                            replace(".", " ").\
+                                                            replace("-", " ").\
+                                                            replace("!", " ").\
+                                                            replace("+", " ").\
+                                                            replace("/", " ").\
+                                                            replace("'s", " ").\
+                                                            replace("=", " ").\
+                                                            replace("{", " ").\
+                                                            replace("}", " ").\
+                                                            lower()))
     detteErBra = {}
     for i in range(0, words.count()):
         word = words.collect()[i][0]
         if(weNeedThis.map(lambda x: x[1]).filter(lambda line: word in line).count() > 0):
             detteErBra[word] = float(float(numberOfDocuments)/float(weNeedThis.map(lambda x: x[1]).filter(lambda line: word in line).count()))
-    print(detteErBra)
+    #print(detteErBra)
     #detteErBra = {'just': 4.470266906375328, 'deck': 16.387579214195185, 'queen': 3.648157553185486, 'four': 25.04804339403332}
     wordsDict = words.collect()
-    print(wordsDict)
+    #print(wordsDict)
     tfidfDict = {}
     for i in range(words.count()):
         for word, idf in detteErBra.iteritems():
@@ -174,6 +208,7 @@ def idf(words):
                 tfidfDict[word] = wordsDict[i][1] * idf
     #print(tfidfDict)
     print(sorted(tfidfDict.items(), key=operator.itemgetter(1), reverse = True))
+
 
 '''    ------------------ When running, under here  ---------------------	 '''
 
@@ -190,7 +225,7 @@ print("Passed arguments " + str(sys.argv))
 if (checkfolderPath(sys.argv)):
     folderPath=formatFolderPath(sys.argv)
     flagPassing(sys.argv)
-    rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv',  use_unicode = False).map(lambda x: x.split("\t"))
+    #rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv',  use_unicode = False).map(lambda x: x.split("\t"))
 
 
 
