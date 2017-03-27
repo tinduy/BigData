@@ -137,18 +137,6 @@ def flagPassing(args):
 '''
 Test built-in TF-IDF from pyspark
 '''
-def tfIDF(rdd):
-    rdd = sc.parallelize(rdd)
-    #rdd = rdd.map(lambda (listingID, text)
-    # Read description words as TF vectors
-    tf = HashingTF()
-    tfVectors = tf.transform(rdd).cache()
-    print(tfVectors)
-    # Compute the IDF, then the TF-IDF vectors
-    idf = IDF()
-    idfModel = idf.fit(tfVectors)
-    tfIdfVectors = idfModel.transform(tfVectors)
-    print(tfIdfVectors.collect())
 
 def tf(table):
     hello = table.\
@@ -229,9 +217,6 @@ if (checkfolderPath(sys.argv)):
     folderPath=formatFolderPath(sys.argv)
     flagPassing(sys.argv)
     #rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv',  use_unicode = False).map(lambda x: x.split("\t"))
-
-
-
 
 # Don't know what this does yet. Taken from skeletonCode
 sc.stop()

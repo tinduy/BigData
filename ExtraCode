@@ -1,0 +1,152 @@
+def averageBookingPricePerNight(cityName):
+    cityAveragePrice = {}
+    for city in cityName:
+        cityFilter = listingsFiltered.filter(lambda line: city in line).map(lambda x: x.split("\t"))
+        priceColumn = cityFilter.map(lambda x: x[getIndexValue("price")])
+        #priceColumn.replace("$","").replace(",","").mean()
+
+
+        cityAveragePrice[city]=priceColumn
+    return cityAveragePrice
+
+#averageBookingPricePerNight(cityCount())
+
+
+def averageBookingPricePerNight():
+    citypriceColumn = listingsFiltered.map(lambda x: (x[int(getIndexValue("city"))], x[int(getIndexValue("price"))].replace("$","").replace(",","")))
+    rddfloat = citypriceColumn.map(lambda x: (x[0], float(x[1])))
+    countInstances = citypriceColumn.countByKey()
+    total = rddfloat.reduceByKey(add)
+    numbers = total.map(lambda x: x[1])
+    sanFranPrice = numbers.collect()[0]
+    NewYorkPrice = numbers.collect()[1]
+    SeattlePrice = numbers.collect()[2]
+    sanFranListings = countInstances["San Francisco"]
+    newYorkListings = countInstances["New York"]
+    seattleListings = countInstances["Seattle"]
+    averageNewYork = NewYorkPrice/newYorkListings
+    averageSeattle = SeattlePrice/seattleListings
+    averageSanFran = sanFranPrice/sanFranListings
+    #task 3a)
+    print ("New York average price: " + str(averageNewYork))
+    print ("Seattle average price: " + str(averageSeattle))
+    print ("San Francisco average price: " + str(averageSanFran))
+    return [averageNewYork, averageSeattle, averageSanFran]
+
+
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+
+AssignedNeighbourhoods = {}
+noMatch = []
+
+def pointIn(listingID, longitude, latitude):
+    point = Point(longitude, latitude)
+    foundFlag = False
+    for i in range(0, len(d["features"])):
+        polygon = Polygon(d["features"][i]["geometry"]["coordinates"][0][0])
+        if (polygon.contains(point)):
+            for neighbourhood, coordinates in mapping.iteritems():
+                if (coordinates== d["features"][i]["geometry"]["coordinates"][0][0]):
+                    foundFlag = True
+                    AssignedNeighbourhoods[listingID]=neighbourhood
+                    with open('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/assignedNeighbourhoods.txt', 'a') as f:
+                        f.write(listingID.encode('utf-8') + '\t'+ neighbourhood.encode('utf-8')+'\n')
+                        #f.write(AssignedNeighbourhoods)
+                    break
+    if (foundFlag==False):
+        print('sumting wong has happen')
+        noMatch.append(listingID)
+        with open('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/assignedNeighbourhoods.txt', 'a') as f:
+            f.write(listingID.encode('utf-8') + '\t'+ 'NO MATCH: sumting wong has happen\n')
+    print (noMatch)
+    #AssignedNeighbourhoods[listingID]='No Neighbourhood matched'
+    #noMatch.append(point)
+
+def linkCoordinatesToNeighbourhood():
+    start_time = time()
+    points = seattleFiltered.map(lambda x: (x[int(getIndexValue("id"))], x[int(getIndexValue("longitude"))], x[int(getIndexValue("latitude"))], x[int(getIndexValue("city"))]))
+    floatPoints = points.map(lambda x: (x[0], float(x[1]), float(x[2])))
+    floatPoints.map(lambda x: pointIn(x[0],x[1],x[2])).collect()
+    print ("Checking neighbourhood Elapsed time: " + str(time()-start_time))
+
+#linkCoordinatesToNeighbourhood()
+
+assignedFile = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/assignedNeighbourhoods.txt', use_unicode = False).map(lambda x: x.split("\t"))
+
+def checkAccuracy():
+    #Combines the file with assigned neigbourhoods to listing with neighbourhood_test.csv
+    #GOAL: check if assigned neigbourhood matches
+    rddAssignedTest = assignedFile.join(neighbourhoodFiltered.map(lambda x: (x[0],str(x[1]))))
+    rddTrue = rddAssignedTest.filter(lambda x: x[1][0]==x[1][1])
+    rddFalse = rddAssignedTest.filter(lambda x: x[1][0]!=x[1][1])
+    print("Matches: " + str(rddTrue.count()))
+    print("No matches: " + str(rddFalse.count()))
+    print("Match percentage: " + str((float(rddTrue.count())/(float(rddTrue.count())+float(rddFalse.count())))*100) + "%")
+
+#checkAccuracy()
+
+def idf(words, which):
+    if (which == 1):
+        numberOfDocuments = reducedListingRDD.count()
+        weNeedThis = mappedListing.map(lambda x: (x[0], x[1].\
+                                    replace(",", "").\
+                                    replace("(", "").\
+                                    replace(")", "").\
+                                    replace("*", "").\
+                                    replace(".", " ").\
+                                    replace("-", " ").\
+                                    replace("!", "").\
+                                    replace("+", " ").\
+                                    replace("/", " ").\
+                                    replace("'s", " ").\
+                                    replace("=", " ").\
+                                    replace("{", " ").\
+                                    replace("}", " ").\
+                                    lower()))
+    elif (which == 2):
+        numberOfDocuments = reducedNeighbourhoodRDD.count()
+        weNeedThis = reducedNeighbourhoodRDD.map(lambda x: (x[0], x[1].\
+                                                            replace(",", " ").\
+                                                            replace("(", " ").\
+                                                            replace(")", " ").\
+                                                            replace("*", " ").\
+                                                            replace(".", " ").\
+                                                            replace("-", " ").\
+                                                            replace("!", " ").\
+                                                            replace("+", " ").\
+                                                            replace("/", " ").\
+                                                            replace("'s", " ").\
+                                                            replace("=", " ").\
+                                                            replace("{", " ").\
+                                                            replace("}", " ").\
+                                                            lower()))
+    detteErBra = {}
+    for i in range(0, words.count()):
+        word = words.collect()[i][0]
+        if(weNeedThis.map(lambda x: x[1]).filter(lambda line: word in line).count() > 0):
+            detteErBra[word] = float(float(numberOfDocuments)/float(weNeedThis.map(lambda x: x[1]).filter(lambda line: word in line).count()))
+    #print(detteErBra)
+    #detteErBra = {'just': 4.470266906375328, 'deck': 16.387579214195185, 'queen': 3.648157553185486, 'four': 25.04804339403332}
+    wordsDict = words.collect()
+    #print(wordsDict)
+    tfidfDict = {}
+    for i in range(words.count()):
+        for word, idf in detteErBra.iteritems():
+            if (wordsDict[i][0] == word):
+                tfidfDict[word] = wordsDict[i][1] * idf
+    #print(tfidfDict)
+    print(sorted(tfidfDict.items(), key=operator.itemgetter(1), reverse = True))
+
+def tfIDF(rdd):
+    rdd = sc.parallelize(rdd)
+    #rdd = rdd.map(lambda (listingID, text)
+    # Read description words as TF vectors
+    tf = HashingTF()
+    tfVectors = tf.transform(rdd).cache()
+    print(tfVectors)
+    # Compute the IDF, then the TF-IDF vectors
+    idf = IDF()
+    idfModel = idf.fit(tfVectors)
+    tfIdfVectors = idfModel.transform(tfVectors)
+    print(tfIdfVectors.collect())
