@@ -198,7 +198,10 @@ def idf2(words, which):
                 map(lambda x: (x[1], x[0])).\
                 sortByKey(0,1).\
                 map(lambda x: (x[1], x[0]))
-    print(joinRDD.collect())
+    print(joinRDD.take(100))
+
+#### NEED TO WRITE TO FILE
+
 
 
 '''    ------------------ When running, under here  ---------------------	 '''
