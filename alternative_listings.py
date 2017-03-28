@@ -7,7 +7,7 @@ import os
 import operator
 from time import time
 
-sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
+sc = SparkContext("local[4]", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
 
 
@@ -37,9 +37,11 @@ listingColumns = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIn
 #print(listingColumns.take(10))
 
 def checkAvailable(listingID, date):
-    filterAvailable = calendarFiltered.filter(lambda line: listingID in line).filter(lambda line: date in line)
-    print(filterAvailable.take(1)[0][2] == 't')
-    return filterAvailable.take(1)[0][2] == 't'
+    start_time = time()
+    filterAvailable = calendarFiltered.filter(lambda line: listingID == line[0] and date ==line[1] and 'f'==line[2])
+    print(filterAvailable.take(1))
+    print ("Checking elapsed time: " + str(time()-start_time)) 
+    return True
 
 
 def findAlternativeListing(listingID, room_type):
@@ -77,9 +79,10 @@ def parametersPassing(args):
     if (checkAvailable(listingID,date)):
         print("A okay, not occupied here, book it before it's too late")
     else:
+        print("room is not available, trying to find alternative listings")
         room_type=getRoomType(listingID)#getRoomType('4717459')
         #findAlternativeListing
-        print("room is not available")
+        
     
 
 '''    ------------------ When running, under here  ---------------------	 '''
