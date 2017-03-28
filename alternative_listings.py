@@ -7,7 +7,7 @@ import os
 import operator
 from time import time
 
-sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
+sc = SparkContext("local[4]", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
 
 
@@ -37,9 +37,16 @@ listingColumns = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIn
 #print(listingColumns.take(10))
 
 def checkAvailable(listingID, date):
-    filterAvailable = calendarFiltered.filter(lambda line: listingID in line).filter(lambda line: date in line)
-    print(filterAvailable.take(1)[0][2] == 't')
-    return filterAvailable.take(1)[0][2] == 't'
+    start_time = time()
+    filterAvailable = calendarFiltered.filter(lambda line: date == line[1]).filter(lambda line: line[2] == 't').map(lambda x: (x[0], x[2]))
+    roomType = listingColumns.map(lambda x: (x[0], x[1]))
+    joinRDD = filterAvailable.join(roomType)
+    listingRoomType = getRoomType(listingID)
+    roomTypeRDD = joinRDD.filter(lambda line: line[1][1] == listingRoomType)
+    priceRDD = roomTypeRDD.map(lambda x: (x[0], x[1][1])).join(listingColumns.map(lambda x: (x[0], x[2])))
+    print(priceRDD.take(100))
+    print("Checking listing Elapsed time: " + str(time() - start_time))
+
 
 
 def findAlternativeListing(listingID, room_type):
@@ -49,6 +56,7 @@ def findAlternativeListing(listingID, room_type):
 def getRoomType(listingID):
     room_type = listingColumns.map(lambda x: (x[0],x[1])).filter(lambda id: listingID in id).map(lambda x: x[1]).collect()
     print(room_type[0])
+
     return room_type[0]
 
 
