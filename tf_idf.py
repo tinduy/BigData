@@ -28,18 +28,10 @@ def getIndexValue(name):
     return dict[name]
 
 
-
-
 mappedListing = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("description")]))
 joinedRDD = rddNeighbourID.join(mappedListing)
-#print(joinedRDD.take(5))
 reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKey(add)
-#print(reducedNeighbourhoodRDD.take(2))
 reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
-#print(reducedListingRDD.take(1))
-
-
-
 
 '''    ------------------ Functions under here  ---------------------	 '''
 # filter for listing id
@@ -62,9 +54,6 @@ def heyListen(id):
                                     lower()))
     return idRDD
 
-
-#heyListen("1513847")
-
 # filter for neighborhood
 def heyNeighbor(neighborhood):
     neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: (x[0], x[1].\
@@ -84,17 +73,6 @@ def heyNeighbor(neighborhood):
                                                     encode('utf-8').\
                                                     lower()))
     return neighborhoodRDD
-
-#heyNeighbor("West Queen Anne")
-
-def descriptionInTable(table):
-    descriptionDict = {}
-    for i in range(0, table.count()):
-        descriptionDict[table.collect()[i][0]] = table.\
-        flatMap(lambda x: x[1].strip().split()).\
-        collect()
-    print(descriptionDict)
-    return descriptionDict
 
 # Checks if path to folder provided exists
 def checkfolderPath(fn):
@@ -198,7 +176,7 @@ def idf2(words, which):
                 map(lambda x: (x[1], x[0])).\
                 sortByKey(0,1).\
                 map(lambda x: (x[1], x[0]))
-    print(joinRDD.collect())
+    print(joinRDD.take(100))
 
 
 '''    ------------------ When running, under here  ---------------------	 '''
@@ -216,7 +194,6 @@ print("Passed arguments " + str(sys.argv))
 if (checkfolderPath(sys.argv)):
     folderPath=formatFolderPath(sys.argv)
     flagPassing(sys.argv)
-    #rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv',  use_unicode = False).map(lambda x: x.split("\t"))
 
 # Don't know what this does yet. Taken from skeletonCode
 sc.stop()
