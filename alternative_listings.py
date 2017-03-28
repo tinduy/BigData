@@ -40,7 +40,7 @@ print(listingColumns.take(10))
 
 
 def findAlternativeListing(listingID, room_type):
-    
+    return None
 
 
 
