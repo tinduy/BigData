@@ -48,32 +48,40 @@ def findAlternativeListing(listingID, room_type):
     return None
 
 
+def getRoomType(listingID):
+    room_type = listingColumns.map(lambda x: (x[0],x[1])).filter(lambda id: listingID in id).map(lambda x: x[1]).collect()
+    print(room_type[0])
+    return room_type[0]
+
+
 
 # Checking running parameters, 
-#   alternative_listings <listing_id> <date:YYY-MM-DD> <x> <y> <n>
+#   alternative_listings <listingID> <date:YYY-MM-DD> <x> <y> <n>
 #       where   
 #               x = price is not higher than x%
 #               y = radius y km
-#               n = output top n listings with common amenities as <listing_id>
+#               n = output top n listings with common amenities as <listingID>
 #   Example:
 #   alternative_listings.py 15359479 2016-12-15 10 2 20
 def parametersPassing(args):
-    listing_id = args[1]
+    listingID = args[1]
     date = args[2]    
     x = args[3]
     y = args[4]
     n = args[5]
-    print("Checking listing id \t"+listing_id)
+    print("Checking listing id \t"+listingID)
     print("On date \t\t"+date)
     print("\nIf alternative listing:")
     print("Alt. listing not exceeding price of\t"+x+"%")
     print("Within a radius of \t\t\t"+y+'KM')
     print("Displaying top n=\t\t\t"+n+" listings")
-    if (checkAvailable(listing_id,date)):
+    
+    if (checkAvailable(listingID,date)):
         print("A okay, not occupied here, book it before it's too late")
     else:
-        room_type=None
+        room_type=getRoomType(listingID)#getRoomType('4717459')
         #findAlternativeListing
+        getRoomType('20540837')
         print("room is not available")
     
 
