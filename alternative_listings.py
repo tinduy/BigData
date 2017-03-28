@@ -40,5 +40,25 @@ def parametersPassing(args):
     x = args[3]
     y = args[4]
     n = args[5]
+    print("Checking listing id \t"+listing_id)
+    print("On date \t\t"+date)
+    print("\nIf alternative listing:")
+    print("Alt. listing not exceeding price of\t"+x+"%")
+    print("Within a radius of \t\t\t"+y+'KM')
+    print("Displaying top n=\t\t\t"+n+" listings")
     
+
+'''    ------------------ When running, under here  ---------------------	 '''
+
+# Skeleton code for standalone application
+
+print("2 Finding Alternative listings")
+parametersPassing(sys.argv)
+
+
+
+
+
+
+
 
