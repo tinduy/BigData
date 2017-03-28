@@ -86,6 +86,15 @@ def checkAccuracy():
 
 #checkAccuracy()
 
+def descriptionInTable(table):
+    descriptionDict = {}
+    for i in range(0, table.count()):
+        descriptionDict[table.collect()[i][0]] = table.\
+        flatMap(lambda x: x[1].strip().split()).\
+        collect()
+    print(descriptionDict)
+    return descriptionDict
+
 def idf(words, which):
     if (which == 1):
         numberOfDocuments = reducedListingRDD.count()
