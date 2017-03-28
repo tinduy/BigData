@@ -6,10 +6,12 @@ import sys
 import os
 import operator
 from time import time
+import csv
+from pyspark.sql import SQLContext
 
 sc = SparkContext("local[4]", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
-
+sqlContext = SQLContext(sc)
 
 # Import the various csv files used
 #   Listings_us.csv
@@ -32,11 +34,11 @@ def getIndexValue(name):
     return dict[name]
 
 listingColumns = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("room_type")], \
-                            x[getIndexValue("price")].replace("$", "").replace(",", ""), \
+                            float(x[getIndexValue("price")].replace("$", "").replace(",", "")), \
                             float(x[getIndexValue("longitude")]), float(x[getIndexValue("latitude")])))
 #print(listingColumns.take(10))
 
-def checkAvailable(listingID, date):
+def checkAvailable(listingID, date, pricePercentage):
     start_time = time()
     filterAvailable = calendarFiltered.filter(lambda line: date == line[1]).filter(lambda line: line[2] == 't').map(lambda x: (x[0], x[2]))
     roomType = listingColumns.map(lambda x: (x[0], x[1]))
@@ -44,7 +46,15 @@ def checkAvailable(listingID, date):
     listingRoomType = getRoomType(listingID)
     roomTypeRDD = joinRDD.filter(lambda line: line[1][1] == listingRoomType)
     priceRDD = roomTypeRDD.map(lambda x: (x[0], x[1][1])).join(listingColumns.map(lambda x: (x[0], x[2])))
-    print(priceRDD.take(100))
+    maxPriceForListing = float(float(listingColumns.filter(lambda line: listingID == line[0]).map(lambda x: x[2]).collect()[0]) * float(pricePercentage))
+    checkPrice = priceRDD.filter(lambda x: x[1][1] < maxPriceForListing)
+    longLat = checkPrice.map(lambda x: (x[0], x[1][1])).\
+                        join(listingColumns.map(lambda x: (x[0], x[3]))).\
+                        map(lambda x: (x[0], x[1][1])).\
+                        join(listingColumns.map(lambda x: (x[0], x[4])))
+    #longLat.map(lambda x: (x[0], x[1][0], x[1][1])).toDF().coalesce(1).write.csv('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/longLat.csv')
+    longLatFiltered = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/longLat.csv')
+
     print("Checking listing Elapsed time: " + str(time() - start_time))
 
 
@@ -55,9 +65,9 @@ def findAlternativeListing(listingID, room_type):
 
 def getRoomType(listingID):
     room_type = listingColumns.map(lambda x: (x[0],x[1])).filter(lambda id: listingID in id).map(lambda x: x[1]).collect()
-    print(room_type[0])
-
     return room_type[0]
+
+
 
 
 
@@ -72,17 +82,17 @@ def getRoomType(listingID):
 def parametersPassing(args):
     listingID = args[1]
     date = args[2]    
-    x = args[3]
+    x = (float(args[3])/100)+1
     y = args[4]
     n = args[5]
     print("Checking listing id \t"+listingID)
     print("On date \t\t"+date)
     print("\nIf alternative listing:")
-    print("Alt. listing not exceeding price of\t"+x+"%")
+    print("Alt. listing not exceeding price of\t"+str(x)+"")
     print("Within a radius of \t\t\t"+y+'KM')
     print("Displaying top n=\t\t\t"+n+" listings")
     
-    if (checkAvailable(listingID,date)):
+    if (checkAvailable(listingID,date,x)):
         print("A okay, not occupied here, book it before it's too late")
     else:
         room_type=getRoomType(listingID)#getRoomType('4717459')
