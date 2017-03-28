@@ -38,9 +38,8 @@ listingColumns = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIn
 
 def checkAvailable(listingID, date):
     filterAvailable = calendarFiltered.filter(lambda line: listingID in line).filter(lambda line: date in line)
-    print(filterAvailable.take(1))
-    print(filterAvailable.collect()[0][2] == 't')
-    return filterAvailable.collect()[0][2] == 't'
+    print(filterAvailable.take(1)[0][2] == 't')
+    return filterAvailable.take(1)[0][2] == 't'
 
 
 
@@ -81,7 +80,6 @@ def parametersPassing(args):
     else:
         room_type=getRoomType(listingID)#getRoomType('4717459')
         #findAlternativeListing
-        getRoomType('20540837')
         print("room is not available")
     
 
