@@ -42,7 +42,6 @@ def checkAvailable(listingID, date):
     return filterAvailable.take(1)[0][2] == 't'
 
 
-
 def findAlternativeListing(listingID, room_type):
     return None
 
