@@ -95,9 +95,10 @@ def parametersPassing(args):
     if (checkAvailable(listingID,date,x)):
         print("A okay, not occupied here, book it before it's too late")
     else:
+        print("room is not available, trying to find alternative listings")
         room_type=getRoomType(listingID)#getRoomType('4717459')
         #findAlternativeListing
-        print("room is not available")
+        
     
 
 '''    ------------------ When running, under here  ---------------------	 '''
