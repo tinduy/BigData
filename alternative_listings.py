@@ -26,22 +26,19 @@ calendarFiltered = fsCalendar.filter(lambda x: x!=calendarHeader).map(lambda x: 
 
 
 
-# Checking flags, 
-#   listing (-l) or a neighborhood (-n) 
-#   should be analysed and listing id or neighborhood name on the input.
-def flagPassing(args):
-    for arg in range(len(args)):
-        if args[arg]=='-l':
-            listingID = args[arg+1]
-            print('Flag -l accepted. Checking listingID: '+args[arg+1])
-            start_time = time()
-            idf2(tf(heyListen(listingID)), 1)
-            print("Checking listing Elapsed time: " + str(time() - start_time))
-            #tfIDF(listingAndDescription[listingID])
-        elif args[arg] == '-n':
-            neighbor = args[arg+1]
-            print('Flag -n accepted. Checking neighborhood: '+neighbor)
-            start_time = time()
-            idf2(tf(heyNeighbor(neighbor)), 2)
-            print("Checking neighbourhood Elapsed time: " + str(time() - start_time))
+# Checking running parameters, 
+#   alternative_listings <listing_id> <date:YYY-MM-DD> <x> <y> <n>
+#       where   
+#               x = price is not higher than x%
+#               y = radius y km
+#               n = output top n listings with common amenities as <listing_id>
+#   Example:
+#   alternative_listings.py 15359479 2016-12-15 10 2 20
+def parametersPassing(args):
+    listing_id = args[1]
+    date = args[2]    
+    x = args[3]
+    y = args[4]
+    n = args[5]
+    
 
