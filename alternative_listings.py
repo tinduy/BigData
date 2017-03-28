@@ -32,10 +32,15 @@ def getIndexValue(name):
     return dict[name]
 
 listingColumns = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("room_type")], \
-                x[getIndexValue("price")].replace("$", "").replace(",", ""), \
-                float(x[getIndexValue("longitude")]), float(x[getIndexValue("latitude")])))
-print(listingColumns.take(10))
+                            x[getIndexValue("price")].replace("$", "").replace(",", ""), \
+                            float(x[getIndexValue("longitude")]), float(x[getIndexValue("latitude")])))
+#print(listingColumns.take(10))
 
+def checkAvailable(listingID, date):
+    filter = calendarFiltered.filter(lambda line: listingID in line).filter(lambda line: date in line)
+    print(filter.take(1))
+    print(filter.collect()[0][2] == 't')
+    return filter.collect()[0][2] == 't'
 
 
 # Checking running parameters, 
@@ -58,7 +63,7 @@ def parametersPassing(args):
     print("Alt. listing not exceeding price of\t"+x+"%")
     print("Within a radius of \t\t\t"+y+'KM')
     print("Displaying top n=\t\t\t"+n+" listings")
-    
+    checkAvailable(listing_id, date)
 
 '''    ------------------ When running, under here  ---------------------	 '''
 
