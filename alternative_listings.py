@@ -38,6 +38,12 @@ print(listingColumns.take(10))
 
 
 
+
+def findAlternativeListing(listingID, room_type):
+    
+
+
+
 # Checking running parameters, 
 #   alternative_listings <listing_id> <date:YYY-MM-DD> <x> <y> <n>
 #       where   
@@ -58,6 +64,12 @@ def parametersPassing(args):
     print("Alt. listing not exceeding price of\t"+x+"%")
     print("Within a radius of \t\t\t"+y+'KM')
     print("Displaying top n=\t\t\t"+n+" listings")
+    if (checkAvailable(listing_id,date)):
+        print("A okay, not occupied here, book it before it's too late")
+    else:
+        room_type=None
+        #findAlternativeListing
+        print("room is not available")
     
 
 '''    ------------------ When running, under here  ---------------------	 '''
