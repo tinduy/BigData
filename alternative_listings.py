@@ -13,7 +13,7 @@ sc.setLogLevel("ERROR")
 
 # Import the various csv files used
 #   Listings_us.csv
-fsListings = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_us.csv', use_unicode = True)
+fsListings = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_us.csv', use_unicode = False)
 listingHeader = fsListings.first()
 listingsFiltered = fsListings.filter(lambda x: x!=listingHeader).map(lambda x: x.split("\t"))
 
@@ -22,7 +22,19 @@ fsCalendar = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/calendar_us
 calendarHeader = fsCalendar.first()
 calendarFiltered = fsCalendar.filter(lambda x: x!=calendarHeader).map(lambda x: x.split("\t"))
 
+header2 = fsListings.first().split("\t")
+dict = {}
+for i in range(len(header2)):
+    dict[header2[i]] = i
 
+# getIndexValue then uses the key (column name) to access right column index.
+def getIndexValue(name):
+    return dict[name]
+
+listingColumns = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("room_type")], \
+                x[getIndexValue("price")].replace("$", "").replace(",", ""), \
+                float(x[getIndexValue("longitude")]), float(x[getIndexValue("latitude")])))
+print(listingColumns.take(10))
 
 
 
