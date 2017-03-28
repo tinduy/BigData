@@ -37,10 +37,10 @@ listingColumns = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIn
 #print(listingColumns.take(10))
 
 def checkAvailable(listingID, date):
-    filter = calendarFiltered.filter(lambda line: listingID in line).filter(lambda line: date in line)
-    print(filter.take(1))
-    print(filter.collect()[0][2] == 't')
-    return filter.collect()[0][2] == 't'
+    filterAvailable = calendarFiltered.filter(lambda line: listingID in line).filter(lambda line: date in line)
+    print(filterAvailable.take(1))
+    print(filterAvailable.collect()[0][2] == 't')
+    return filterAvailable.collect()[0][2] == 't'
 
 
 
