@@ -59,14 +59,14 @@ def alternativeListings(listingID, date, pricePercentage, y, n):
     listingCoordinates = listingColumns.map(lambda x: (x[0], float(x[3]), float(x[4]))).filter(lambda id: listingID in id)
     long = listingCoordinates.map(lambda x: x[1]).collect()[0]
     lat = listingCoordinates.map(lambda x: x[2]).collect()[0]
-    hallaBalla = longLatFiltered.map(lambda x: (x[0], haversine(float(x[2]), float(x[1]), float(lat), float(long))))
-    filterBalla = hallaBalla.filter(lambda x: x[1] < float(y))
+    distanceCalculation = longLatFiltered.map(lambda x: (x[0], haversine(float(x[2]), float(x[1]), float(lat), float(long))))
+    filterDistance = distanceCalculation.filter(lambda x: x[1] < float(y))
     amenitiesListing = listingColumns.map(lambda x: (x[0], x[5])).\
                                     filter(lambda id: listingID == id[0]).\
                                     map(lambda x: x[1].replace("{", "").replace("}", "").\
                                     replace("\"", "").lower().strip().split(",")).collect()[0]
     #print(amenitiesListing)
-    listAmenities = filterBalla.join(listingColumns.map(lambda x: (x[0], x[5]))).\
+    listAmenities = filterDistance.join(listingColumns.map(lambda x: (x[0], x[5]))).\
                                                     map(lambda x: (x[0], x[1][1].replace("{", "").replace("}", "").\
                                                     replace("\"", "").lower().strip().split(",")))
     checkAmenities = listAmenities.flatMapValues(lambda x: x).\
@@ -80,8 +80,8 @@ def alternativeListings(listingID, date, pricePercentage, y, n):
     #print(checkAmenities)
     listId = sc.parallelize(checkAmenities).map(lambda x: x[0]).collect()
     amenities = sc.parallelize(checkAmenities).collectAsMap()
-    distance = filterBalla.collectAsMap()
-    fileMaker = listingColumns.filter(lambda id: id[0] in listId).map(lambda x: (x[0], x[6], \
+    distance = filterDistance.collectAsMap()
+    fileMaker = listingColumns.filter(lambda id: id[0] in listId).map(lambda x: (x[0], x[6],\
                                                         amenities[x[0]], distance[x[0]], x[2])).\
                                                         map(lambda x: (x[2], x[0], x[1], x[3], x[4])).\
                                                         sortByKey(0,1).\
@@ -89,11 +89,14 @@ def alternativeListings(listingID, date, pricePercentage, y, n):
     #print(fileMaker.collect())
     #fileMaker.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile("/usr/local/spark/spark-2.1.0-bin-hadoop2.7/alternatives.tsv")
     print("Checking listing Elapsed time: " + str(time() - start_time))
-
-
-def findAlternativeListing(listingID, room_type):
-    return None
-
+    cartoMaker = listingColumns.filter(lambda id: id[0] in listId).map(lambda x: (x[0], x[6],\
+                                                        amenities[x[0]], distance[x[0]], x[2], x[3], x[4])).\
+                                                        map(lambda x: (x[2], x[0], x[1], x[3], x[4], x[5], x[6])).\
+                                                        sortByKey(0, 1).\
+                                                        map(lambda x: (x[1], x[2], x[0], x[3], x[4], x[5], x[6]))
+    listingMaker = listingColumns.filter(lambda id: listingID in id).map(lambda x: (x[0], x[6], 0, 0, x[2], x[3], x[4]))
+    print(listingMaker.collect())
+    #cartoMaker.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile("/usr/local/spark/spark-2.1.0-bin-hadoop2.7/cartoAlternatives.tsv")
 
 def getRoomType(listingID):
     room_type = listingColumns.map(lambda x: (x[0],x[1])).filter(lambda id: listingID in id).map(lambda x: x[1]).collect()
