@@ -40,7 +40,7 @@ listingColumns = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIn
                                   x[getIndexValue("amenities")], x[getIndexValue("name")]))
 #print(listingColumns.take(10))
 
-def checkAvailable(listingID, date, pricePercentage, y, n):
+def alternativeListings(listingID, date, pricePercentage, y, n):
     start_time = time()
     #filterAvailable = calendarFiltered.filter(lambda line: date == line[1]).filter(lambda line: line[2] == 't').map(lambda x: (x[0], x[2]))
     #roomType = listingColumns.map(lambda x: (x[0], x[1]))
@@ -131,15 +131,7 @@ def parametersPassing(args):
     print("Alt. listing not exceeding price of\t"+str(x)+"")
     print("Within a radius of \t\t\t"+y+'KM')
     print("Displaying top n=\t\t\t"+n+" listings")
-    
-    if (checkAvailable(listingID,date,x,y,n)):
-        print("A okay, not occupied here, book it before it's too late")
-    else:
-        print("room is not available, trying to find alternative listings")
-        room_type=getRoomType(listingID)#getRoomType('4717459')
-        #findAlternativeListing
-        
-    
+    (alternativeListings(listingID,date,x,y,n))
 
 '''    ------------------ When running, under here  ---------------------	 '''
 
