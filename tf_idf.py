@@ -113,7 +113,7 @@ def flagPassing(args):
 
 ######################### Task 1.1.1 TF-IDF
 '''
-Test built-in TF-IDF from pyspark
+TF-IDF
 '''
 
 def tf(table):
@@ -187,7 +187,6 @@ def idf2(words, which):
 
 # Skeleton code for standalone application
 '''
-    # need to build all dependencies and modules
     # accepts a full path to the folder with the datasets,
     # a flag marking whether a listing (-l) or a neighborhood (-n) should be analysed and listing id or neighborhood name on the input.
 '''
