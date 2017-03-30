@@ -159,3 +159,9 @@ def tfIDF(rdd):
     idfModel = idf.fit(tfVectors)
     tfIdfVectors = idfModel.transform(tfVectors)
     print(tfIdfVectors.collect())
+
+#  listing id , listing name number of common amenities, distance, price
+writeToFileRDD = sc.parallelize(checkAmenities).join(listingColumns.map(lambda x: (x[0], x[2])))
+writeToFileRDD2 = writeToFileRDD.map(lambda n: (n[0],str(n[1][0])+"\t"+str(n[1][1]))).join(listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("name")])))
+#print(writeToFileRDD2.take(int(n)))
+#print(writeToFileRDD2.collect(['13532647']))

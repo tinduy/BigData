@@ -79,12 +79,6 @@ def checkAvailable(listingID, date, pricePercentage, y, n):
                                     take(int(n))
     #print(checkAmenities)
     listId = sc.parallelize(checkAmenities).map(lambda x: x[0]).collect()
-    #  listing id , listing name number of common amenities, distance, price
-    writeToFileRDD = sc.parallelize(checkAmenities).join(listingColumns.map(lambda x: (x[0], x[2])))
-    writeToFileRDD2 = writeToFileRDD.map(lambda n: (n[0],str(n[1][0])+"\t"+str(n[1][1]))).join(listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("name")])))
-    #print(writeToFileRDD2.take(int(n)))
-    #print(writeToFileRDD2.collect(['13532647']))
-    ###########TRY THIS SHIT###############
     amenities = sc.parallelize(checkAmenities).collectAsMap()
     distance = filterBalla.collectAsMap()
     fileMaker = listingColumns.filter(lambda id: id[0] in listId).map(lambda x: (x[0], x[6], \
