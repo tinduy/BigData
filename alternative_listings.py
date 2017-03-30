@@ -8,6 +8,7 @@ import operator
 from time import time
 import csv
 from pyspark.sql import SQLContext
+from math import radians, sin, cos, sqrt, asin
 
 sc = SparkContext("local[4]", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
@@ -35,28 +36,65 @@ def getIndexValue(name):
 
 listingColumns = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("room_type")], \
                             float(x[getIndexValue("price")].replace("$", "").replace(",", "")), \
-                            float(x[getIndexValue("longitude")]), float(x[getIndexValue("latitude")])))
+                            float(x[getIndexValue("longitude")]), float(x[getIndexValue("latitude")]), \
+                                  x[getIndexValue("amenities")], x[getIndexValue("name")]))
 #print(listingColumns.take(10))
 
-def checkAvailable(listingID, date, pricePercentage):
+def checkAvailable(listingID, date, pricePercentage, y, n):
     start_time = time()
-    filterAvailable = calendarFiltered.filter(lambda line: date == line[1]).filter(lambda line: line[2] == 't').map(lambda x: (x[0], x[2]))
-    roomType = listingColumns.map(lambda x: (x[0], x[1]))
-    joinRDD = filterAvailable.join(roomType)
-    listingRoomType = getRoomType(listingID)
-    roomTypeRDD = joinRDD.filter(lambda line: line[1][1] == listingRoomType)
-    priceRDD = roomTypeRDD.map(lambda x: (x[0], x[1][1])).join(listingColumns.map(lambda x: (x[0], x[2])))
-    maxPriceForListing = float(float(listingColumns.filter(lambda line: listingID == line[0]).map(lambda x: x[2]).collect()[0]) * float(pricePercentage))
-    checkPrice = priceRDD.filter(lambda x: x[1][1] < maxPriceForListing)
-    longLat = checkPrice.map(lambda x: (x[0], x[1][1])).\
-                        join(listingColumns.map(lambda x: (x[0], x[3]))).\
-                        map(lambda x: (x[0], x[1][1])).\
-                        join(listingColumns.map(lambda x: (x[0], x[4])))
+    #filterAvailable = calendarFiltered.filter(lambda line: date == line[1]).filter(lambda line: line[2] == 't').map(lambda x: (x[0], x[2]))
+    #roomType = listingColumns.map(lambda x: (x[0], x[1]))
+    #joinRDD = filterAvailable.join(roomType)
+    #listingRoomType = getRoomType(listingID)
+    #roomTypeRDD = joinRDD.filter(lambda line: line[1][1] == listingRoomType)
+    #priceRDD = roomTypeRDD.map(lambda x: (x[0], x[1][1])).join(listingColumns.map(lambda x: (x[0], x[2])))
+    #maxPriceForListing = float(float(listingColumns.filter(lambda line: listingID == line[0]).map(lambda x: x[2]).collect()[0]) * float(pricePercentage))
+    #checkPrice = priceRDD.filter(lambda x: x[1][1] < maxPriceForListing)
+    #longLat = checkPrice.map(lambda x: (x[0], x[1][1])).\
+     #                   join(listingColumns.map(lambda x: (x[0], x[3]))).\
+      #                  map(lambda x: (x[0], x[1][1])).\
+       #                 join(listingColumns.map(lambda x: (x[0], x[4])))
     #longLat.map(lambda x: (x[0], x[1][0], x[1][1])).toDF().coalesce(1).write.csv('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/longLat.csv')
-    longLatFiltered = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/longLat.csv')
-
+    longLatFiltered = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/longLat.csv', use_unicode = False).map(lambda x: x.split(","))
+    listingCoordinates = listingColumns.map(lambda x: (x[0], float(x[3]), float(x[4]))).filter(lambda id: listingID in id)
+    long = listingCoordinates.map(lambda x: x[1]).collect()[0]
+    lat = listingCoordinates.map(lambda x: x[2]).collect()[0]
+    hallaBalla = longLatFiltered.map(lambda x: (x[0], haversine(float(x[2]), float(x[1]), float(lat), float(long))))
+    filterBalla = hallaBalla.filter(lambda x: x[1] < float(y))
+    amenitiesListing = listingColumns.map(lambda x: (x[0], x[5])).\
+                                    filter(lambda id: listingID == id[0]).\
+                                    map(lambda x: x[1].replace("{", "").replace("}", "").\
+                                    replace("\"", "").lower().strip().split(",")).collect()[0]
+    #print(amenitiesListing)
+    listAmenities = filterBalla.join(listingColumns.map(lambda x: (x[0], x[5]))).\
+                                                    map(lambda x: (x[0], x[1][1].replace("{", "").replace("}", "").\
+                                                    replace("\"", "").lower().strip().split(",")))
+    checkAmenities = listAmenities.flatMapValues(lambda x: x).\
+                                    filter(lambda x: x[1] in amenitiesListing).\
+                                    map(lambda x: (x[0], int(1))).\
+                                    reduceByKey(add).\
+                                    map(lambda x: (x[1], x[0])).\
+                                    sortByKey(0,1).\
+                                    map(lambda x: (x[1], x[0])).\
+                                    take(int(n))
+    #print(checkAmenities)
+    listId = sc.parallelize(checkAmenities).map(lambda x: x[0]).collect()
+    #  listing id , listing name number of common amenities, distance, price
+    writeToFileRDD = sc.parallelize(checkAmenities).join(listingColumns.map(lambda x: (x[0], x[2])))
+    writeToFileRDD2 = writeToFileRDD.map(lambda n: (n[0],str(n[1][0])+"\t"+str(n[1][1]))).join(listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("name")])))
+    #print(writeToFileRDD2.take(int(n)))
+    #print(writeToFileRDD2.collect(['13532647']))
+    ###########TRY THIS SHIT###############
+    amenities = sc.parallelize(checkAmenities).collectAsMap()
+    distance = filterBalla.collectAsMap()
+    fileMaker = listingColumns.filter(lambda id: id[0] in listId).map(lambda x: (x[0], x[6], \
+                                                        amenities[x[0]], distance[x[0]], x[2])).\
+                                                        map(lambda x: (x[2], x[0], x[1], x[3], x[4])).\
+                                                        sortByKey(0,1).\
+                                                        map(lambda x: (x[1], x[2], x[0], x[3], x[4]))
+    #print(fileMaker.collect())
+    #fileMaker.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile("/usr/local/spark/spark-2.1.0-bin-hadoop2.7/alternatives.tsv")
     print("Checking listing Elapsed time: " + str(time() - start_time))
-
 
 
 def findAlternativeListing(listingID, room_type):
@@ -77,7 +115,6 @@ def haversine(lat1, lon1, lat2, lon2):
     c = 2 * asin(sqrt(a))
     r = 6371 # Radius of earth in kilometers. Use 3956 for miles
     return c * r
-
 
 
 # Checking running parameters, 
@@ -101,7 +138,7 @@ def parametersPassing(args):
     print("Within a radius of \t\t\t"+y+'KM')
     print("Displaying top n=\t\t\t"+n+" listings")
     
-    if (checkAvailable(listingID,date,x)):
+    if (checkAvailable(listingID,date,x,y,n)):
         print("A okay, not occupied here, book it before it's too late")
     else:
         print("room is not available, trying to find alternative listings")

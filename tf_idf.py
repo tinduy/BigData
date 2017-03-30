@@ -177,6 +177,7 @@ def idf2(words, which):
                 sortByKey(0,1).\
                 map(lambda x: (x[1], x[0]))
     print(joinRDD.take(100))
+    #joinRDD.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile("/usr/local/spark/spark-2.1.0-bin-hadoop2.7/tf_idf_results.tsv")
 
 #### NEED TO WRITE TO FILE
 
