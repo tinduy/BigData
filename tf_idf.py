@@ -9,11 +9,11 @@ from time import time
 
 sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
-rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv', use_unicode = True).map(lambda x: x.split("\t"))
 
 # full path to the folder with the datasets
 folderPath = None
 
+rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv', use_unicode = True).map(lambda x: x.split("\t"))
 fsListings = sc.textFile(folderPath+'listings_us.csv', use_unicode = True)
 listingHeader = fsListings.first()
 listingsFiltered = fsListings.filter(lambda x: x!=listingHeader).map(lambda x: x.split("\t"))
@@ -53,12 +53,12 @@ def heyListen(id):
                                     replace("-", "").\
                                     replace("!", "").\
                                     replace("+", "").\
-                                    replace("/", " "). \
+                                    replace("/", " ").\
                                     replace("\\", " ").\
                                     replace("=", "").\
                                     replace("{", "").\
-                                    replace("}", ""). \
-                                    encode('utf-8'). \
+                                    replace("}", "").\
+                                    encode('utf-8').\
                                     lower()))
     return idRDD
 
@@ -67,17 +67,17 @@ def heyNeighbor(neighborhood):
     neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: (x[0], x[1].\
                                                     replace(",", "").\
                                                     replace("(", "").\
-                                                    replace(")", ""). \
-                                                    replace("*", ""). \
-                                                    replace(".", " "). \
-                                                    replace("-", ""). \
-                                                    replace("!", ""). \
-                                                    replace("+", ""). \
-                                                    replace("/", " "). \
+                                                    replace(")", "").\
+                                                    replace("*", "").\
+                                                    replace(".", " ").\
+                                                    replace("-", "").\
+                                                    replace("!", "").\
+                                                    replace("+", "").\
+                                                    replace("/", " ").\
                                                     replace("\\", " ").\
                                                     replace("=", "").\
                                                     replace("{", "").\
-                                                    replace("}", ""). \
+                                                    replace("}", "").\
                                                     encode('utf-8').\
                                                     lower()))
     return neighborhoodRDD
@@ -119,7 +119,7 @@ def flagPassing(args):
             idf(tf(heyNeighbor(neighbor)), 2)
             print("Checking neighbourhood Elapsed time: " + str(time() - start_time))
 
-######################### Task 1.1.1 TF-IDF
+######################### Task 1.1.1 TF-IDF #########################
 '''
 TF-IDF
 '''
@@ -157,7 +157,7 @@ def idf(words, which):
                                     replace("'s", " ").\
                                     replace("=", " ").\
                                     replace("{", " ").\
-                                    replace("}", " "). \
+                                    replace("}", " ").\
                                     encode('utf-8').\
                                     lower()))
     elif (which == 2):
@@ -171,12 +171,12 @@ def idf(words, which):
                                                             replace("-", " ").\
                                                             replace("!", " ").\
                                                             replace("+", " ").\
-                                                            replace("/", " "). \
-                                                            replace("\\", " "). \
+                                                            replace("/", " ").\
+                                                            replace("\\", " ").\
                                                             replace("'s", " ").\
                                                             replace("=", " ").\
                                                             replace("{", " ").\
-                                                            replace("}", " "). \
+                                                            replace("}", " ").\
                                                             encode('utf-8').\
                                                             lower()))
     idfCalc = listingDesc.map(lambda x: (x[0], x[1].strip().split())).\

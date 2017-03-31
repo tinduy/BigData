@@ -46,10 +46,12 @@ def alternativeListings(listingID, date, pricePercentage, y, n):
     # Filter out the available listings on date
     filterAvailable = calendarFiltered.filter(lambda line: date == line[1]).filter(lambda line: line[2] == 't').map(lambda x: (x[0], x[2]))
     roomType = listingColumns.map(lambda x: (x[0], x[1]))
+    # Join with key = id
     joinRDD = filterAvailable.join(roomType)
     listingRoomType = getRoomType(listingID)
     # Filter out the listings with same room type as listingID
     roomTypeRDD = joinRDD.filter(lambda line: line[1][1] == listingRoomType)
+    # Join with key = id
     priceRDD = roomTypeRDD.map(lambda x: (x[0], x[1][1])).join(listingColumns.map(lambda x: (x[0], x[2])))
     # Calculate the maximum price for the listings
     maxPriceForListing = float(float(listingColumns.filter(lambda line: listingID == line[0]).\
@@ -74,7 +76,7 @@ def alternativeListings(listingID, date, pricePercentage, y, n):
                                     filter(lambda id: listingID == id[0]).\
                                     map(lambda x: x[1].replace("{", "").replace("}", "").\
                                     replace("\"", "").lower().strip().split(",")).collect()[0]
-    # Get the amenities for the remaining listings
+    # Get the amenities for the remaining listings, join with key = id
     listAmenities = filterDistance.join(listingColumns.map(lambda x: (x[0], x[5]))).\
                                                     map(lambda x: (x[0], x[1][1].replace("{", "").replace("}", "").\
                                                     replace("\"", "").lower().strip().split(",")))
@@ -97,7 +99,7 @@ def alternativeListings(listingID, date, pricePercentage, y, n):
                                                         map(lambda x: (x[2], x[0], x[1], x[3], x[4])).\
                                                         sortByKey(0,1).\
                                                         map(lambda x: (x[1], x[2], x[0], x[3], x[4]))
-    #fileMaker.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile("/usr/local/spark/spark-2.1.0-bin-hadoop2.7/alternatives.tsv")
+    fileMaker.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile("/usr/local/spark/spark-2.1.0-bin-hadoop2.7/alternatives2.tsv")
     print("Checking listing Elapsed time: " + str(time() - start_time))
     #Make file for CARTO vizualisation
     cartoMaker = listingColumns.filter(lambda id: id[0] in listId).map(lambda x: (x[0], x[6],\
