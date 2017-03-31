@@ -9,37 +9,52 @@ from time import time
 
 sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
-rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv', use_unicode = True).map(lambda x: x.split("\t"))
 
 # full path to the folder with the datasets
 folderPath = None
 
-fsListings = sc.textFile(folderPath+'listings_us.csv', use_unicode = True)
-listingHeader = fsListings.first()
-listingsFiltered = fsListings.filter(lambda x: x!=listingHeader).map(lambda x: x.split("\t"))
 
-header2 = fsListings.first().split("\t")
-dict = {}
-for i in range(len(header2)):
-    dict[header2[i]] = i
+# Checks if path to folder provided exists
+def checkfolderPath(fn):
+    fn = sys.argv[1]
+    if os.path.exists(fn):
+        # folderPath exists
+        return True
+    else:
+        print(fn+ " does not exist. Retry with an existing path")
+        return False
 
-# getIndexValue then uses the key (column name) to access right column index.
-def getIndexValue(name):
-    return dict[name]
+# check if folderpath ends on /
+def formatFolderPath(fn):
+    if fn[1].endswith('/'):
+        return fn[1]
+    else:
+        print(fn[1]+'/')
+        return (fn[1]+'/')
 
-# rdd containing listingID and corresponding description
-mappedListing = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("description")]))
 
-# rdd containing listingID and corresponding description, as well as neighborhood
-joinedRDD = rddNeighbourID.join(mappedListing)
+# Checking flags, 
+#   listing (-l) or a neighborhood (-n) 
+#   should be analysed and listing id or neighborhood name on the input.
+def flagPassing(args):
+    for arg in range(len(args)):
+        if args[arg]=='-l':
+            listingID = args[arg+1]
+            print('Flag -l accepted. Checking listingID: '+args[arg+1])
+            start_time = time()
+            idf(tf(heyListen(listingID)), 1)
+            print("Checking listing Elapsed time: " + str(time() - start_time))
+            #tfIDF(listingAndDescription[listingID])
+        elif args[arg] == '-n':
+            neighbor = args[arg+1]
+            print('Flag -n accepted. Checking neighborhood: '+neighbor)
+            start_time = time()
+            idf(tf(heyNeighbor(neighbor)), 2)
+            print("Checking neighbourhood Elapsed time: " + str(time() - start_time))
 
-# rdd where all the descriptions of the listings in a neighborhood, are concatenated into one. 
-# Key = neighborhood, value = description
-reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKey(add)
 
-# rdd linking listingID and description
-# Key = 
-reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
+
+
 
 '''    ------------------ Functions under here  ---------------------	 '''
 # filter for listing id
@@ -82,42 +97,7 @@ def heyNeighbor(neighborhood):
                                                     lower()))
     return neighborhoodRDD
 
-# Checks if path to folder provided exists
-def checkfolderPath(fn):
-    fn = sys.argv[1]
-    if os.path.exists(fn):
-        # folderPath exists
-        return True
-    else:
-        print(fn+ " does not exist. Retry with an existing path")
-        return False
 
-# check if folderpath ends on /
-def formatFolderPath(fn):
-    if fn[1].endswith('/'):
-        return fn[1]
-    else:
-        print(fn[1]+'/')
-        return (fn[1]+'/')
-
-# Checking flags, 
-#   listing (-l) or a neighborhood (-n) 
-#   should be analysed and listing id or neighborhood name on the input.
-def flagPassing(args):
-    for arg in range(len(args)):
-        if args[arg]=='-l':
-            listingID = args[arg+1]
-            print('Flag -l accepted. Checking listingID: '+args[arg+1])
-            start_time = time()
-            idf(tf(heyListen(listingID)), 1)
-            print("Checking listing Elapsed time: " + str(time() - start_time))
-            #tfIDF(listingAndDescription[listingID])
-        elif args[arg] == '-n':
-            neighbor = args[arg+1]
-            print('Flag -n accepted. Checking neighborhood: '+neighbor)
-            start_time = time()
-            idf(tf(heyNeighbor(neighbor)), 2)
-            print("Checking neighbourhood Elapsed time: " + str(time() - start_time))
 
 ######################### Task 1.1.1 TF-IDF
 '''
@@ -192,22 +172,79 @@ def idf(words, which):
                 map(lambda x: (x[1], x[0]))
     print(joinRDD.take(100))
     #Write to file
-    #joinRDD.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile("/usr/local/spark/spark-2.1.0-bin-hadoop2.7/tf_idf_results.tsv")
+    joinRDD.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile(folderPath+"tf_idf_results.tsv")
+
+
+
+
+#'''    ------------------ When running, under here  ---------------------	 '''
+
+## Skeleton code for standalone application
+#'''
+#    # accepts a full path to the folder with the datasets,
+#    # a flag marking whether a listing (-l) or a neighborhood (-n) should be analysed and listing id or neighborhood name on the input.
+#'''
+#print("TF-IDF Assignment")
+##file = sc.textFile("/home/tin/Documents/BIGData/SkeletonCodeFromJAN/application_scaffolding/python_project/data.txt").cache()
+##print("File has " + str(file.count()) + " lines.")
+#print("Passed arguments " + str(sys.argv))
+#if (checkfolderPath(sys.argv)):
+#    folderPath=formatFolderPath(sys.argv)
+#    flagPassing(sys.argv)
 
 
 '''    ------------------ When running, under here  ---------------------	 '''
 
-# Skeleton code for standalone application
-'''
-    # accepts a full path to the folder with the datasets,
-    # a flag marking whether a listing (-l) or a neighborhood (-n) should be analysed and listing id or neighborhood name on the input.
-'''
-print("TF-IDF Assignment")
-#file = sc.textFile("/home/tin/Documents/BIGData/SkeletonCodeFromJAN/application_scaffolding/python_project/data.txt").cache()
-#print("File has " + str(file.count()) + " lines.")
-print("Passed arguments " + str(sys.argv))
-if (checkfolderPath(sys.argv)):
-    folderPath=formatFolderPath(sys.argv)
+def main():
+    global folderPath
+    print ("Hello, world!")
+    # Skeleton code for standalone application
+    '''
+        # accepts a full path to the folder with the datasets,
+        # a flag marking whether a listing (-l) or a neighborhood (-n) should be analysed and listing id or neighborhood name on the input.
+    '''
+    print("TF-IDF Assignment")
+    #file = sc.textFile("/home/tin/Documents/BIGData/SkeletonCodeFromJAN/application_scaffolding/python_project/data.txt").cache()
+    #print("File has " + str(file.count()) + " lines.")
+    print("Passed arguments " + str(sys.argv))
+    if (checkfolderPath(sys.argv)):
+        folderPath=formatFolderPath(sys.argv)
+        
+
+if __name__ == '__main__':
+    main()
+    '''    ------------------ Files and paths  ---------------------	 '''
+
+    rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv', use_unicode = True).map(lambda x: x.split("\t"))
+
+    fsListings = sc.textFile(folderPath+'listings_us.csv', use_unicode = True)
+
+    listingHeader = fsListings.first()
+    listingsFiltered = fsListings.filter(lambda x: x!=listingHeader).map(lambda x: x.split("\t"))
+
+    header2 = fsListings.first().split("\t")
+    dict = {}
+    for i in range(len(header2)):
+        dict[header2[i]] = i
+
+    # getIndexValue then uses the key (column name) to access right column index.
+    def getIndexValue(name):
+        return dict[name]
+
+    # rdd containing listingID and corresponding description
+    mappedListing = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("description")]))
+
+    # rdd containing listingID and corresponding description, as well as neighborhood
+    joinedRDD = rddNeighbourID.join(mappedListing)
+
+    # rdd where all the descriptions of the listings in a neighborhood, are concatenated into one. 
+    # Key = neighborhood, value = description
+    reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKey(add)
+
+    # rdd linking listingID and description
+    # Key = 
+    reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
+    
     flagPassing(sys.argv)
 
 sc.stop()
