@@ -9,12 +9,12 @@ from time import time
 
 sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
-rddNeighbourID = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_ids_with_neighborhoods.tsv', use_unicode = True).map(lambda x: x.split("\t"))
+rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv', use_unicode = True).map(lambda x: x.split("\t"))
 
 # full path to the folder with the datasets
 folderPath = None
 
-fsListings = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/listings_us.csv', use_unicode = True)
+fsListings = sc.textFile(folderPath+'listings_us.csv', use_unicode = True)
 listingHeader = fsListings.first()
 listingsFiltered = fsListings.filter(lambda x: x!=listingHeader).map(lambda x: x.split("\t"))
 
@@ -27,10 +27,18 @@ for i in range(len(header2)):
 def getIndexValue(name):
     return dict[name]
 
-
+# rdd containing listingID and corresponding description
 mappedListing = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("description")]))
+
+# rdd containing listingID and corresponding description, as well as neighborhood
 joinedRDD = rddNeighbourID.join(mappedListing)
+
+# rdd where all the descriptions of the listings in a neighborhood, are concatenated into one. 
+# Key = neighborhood, value = description
 reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKey(add)
+
+# rdd linking listingID and description
+# Key = 
 reducedListingRDD = joinedRDD.map(lambda x: (x[0], x[1][1]))
 
 '''    ------------------ Functions under here  ---------------------	 '''
@@ -116,17 +124,23 @@ def flagPassing(args):
 TF-IDF
 '''
 
+# Takes in a cleaned rdd from heyListen, containing a specific listing's description
 def tf(table):
+    #split description on space and count instances of each word
     tfTable = table.\
         flatMap(lambda x: x[1].strip().split()).\
         map(lambda x: (x, int(1))).\
         reduceByKey(add)
-    numberOfTermsInDocument = hello.count()
+    numberOfTermsInDocument = tfTable.count()
     print(numberOfTermsInDocument)
+    # Number of times term t appears in a document d
+    # divided by
+    # Total number of terms in the document d
     tfCalc = tfTable.map(lambda x: (x[0], float(float(x[1])/float(numberOfTermsInDocument))))
     return tfCalc
 
 def idf(words, which):
+    # which = {1,2} where 1 = listing and 2 = neighborhood
     if (which == 1):
         numberOfDocuments = reducedListingRDD.count()
         listingDesc = mappedListing.map(lambda x: (x[0], x[1].\
