@@ -68,12 +68,12 @@ def heyListen(id):
                                     replace("-", "").\
                                     replace("!", "").\
                                     replace("+", "").\
-                                    replace("/", " "). \
+                                    replace("/", " ").\
                                     replace("\\", " ").\
                                     replace("=", "").\
                                     replace("{", "").\
-                                    replace("}", ""). \
-                                    encode('utf-8'). \
+                                    replace("}", "").\
+                                    encode('utf-8').\
                                     lower()))
     return idRDD
 
@@ -82,17 +82,17 @@ def heyNeighbor(neighborhood):
     neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: (x[0], x[1].\
                                                     replace(",", "").\
                                                     replace("(", "").\
-                                                    replace(")", ""). \
-                                                    replace("*", ""). \
-                                                    replace(".", " "). \
-                                                    replace("-", ""). \
-                                                    replace("!", ""). \
-                                                    replace("+", ""). \
-                                                    replace("/", " "). \
+                                                    replace(")", "").\
+                                                    replace("*", "").\
+                                                    replace(".", " ").\
+                                                    replace("-", "").\
+                                                    replace("!", "").\
+                                                    replace("+", "").\
+                                                    replace("/", " ").\
                                                     replace("\\", " ").\
                                                     replace("=", "").\
                                                     replace("{", "").\
-                                                    replace("}", ""). \
+                                                    replace("}", "").\
                                                     encode('utf-8').\
                                                     lower()))
     return neighborhoodRDD
@@ -137,7 +137,7 @@ def idf(words, which):
                                     replace("'s", " ").\
                                     replace("=", " ").\
                                     replace("{", " ").\
-                                    replace("}", " "). \
+                                    replace("}", " ").\
                                     encode('utf-8').\
                                     lower()))
     elif (which == 2):
@@ -151,12 +151,12 @@ def idf(words, which):
                                                             replace("-", " ").\
                                                             replace("!", " ").\
                                                             replace("+", " ").\
-                                                            replace("/", " "). \
-                                                            replace("\\", " "). \
+                                                            replace("/", " ").\
+                                                            replace("\\", " ").\
                                                             replace("'s", " ").\
                                                             replace("=", " ").\
                                                             replace("{", " ").\
-                                                            replace("}", " "). \
+                                                            replace("}", " ").\
                                                             encode('utf-8').\
                                                             lower()))
     idfCalc = listingDesc.map(lambda x: (x[0], x[1].strip().split())).\
