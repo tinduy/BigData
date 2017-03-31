@@ -172,3 +172,6 @@ else:
     print("room is not available, trying to find alternative listings")
     room_type=getRoomType(listingID)#getRoomType('4717459')
     #findAlternativeListing
+
+#longLat.map(lambda x: (x[0], x[1][0], x[1][1])).toDF().coalesce(1).write.csv('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/longLat.csv')
+#longLatFiltered = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/longLat.csv', use_unicode = False).map(lambda x: x.split(","))
