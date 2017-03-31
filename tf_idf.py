@@ -81,13 +81,14 @@ def heyListen(id):
                                     replace("=", " ").\
                                     replace("{", " ").\
                                     replace("}", " ").\
+                                    replace("~", " ").\
                                     encode('utf-8').\
                                     lower()))
     return idRDD
 
 # filter for neighborhood
 def heyNeighbor(neighborhood):
-    neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: (x[0], x[1].\
+    neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: (x[0].encode('utf-8'), x[1].\
                                                     replace(",", " ").\
                                                     replace("(", " ").\
                                                     replace(")", " ").\
@@ -107,6 +108,7 @@ def heyNeighbor(neighborhood):
                                                     replace("=", " ").\
                                                     replace("{", " ").\
                                                     replace("}", " ").\
+                                                    replace("~", " ").\
                                                     encode('utf-8').\
                                                     lower()))
     return neighborhoodRDD
@@ -156,11 +158,12 @@ def idf(words, which):
                                     replace("=", " ").\
                                     replace("{", " ").\
                                     replace("}", " ").\
+                                    replace("~", " ").\
                                     encode('utf-8').\
                                     lower()))
     elif (which == 2):
         numberOfDocuments = reducedNeighbourhoodRDD.count()
-        listingDesc = reducedNeighbourhoodRDD.map(lambda x: (x[0], x[1].\
+        listingDesc = reducedNeighbourhoodRDD.map(lambda x: (x[0].encode('utf-8'), x[1].\
                                                             replace(",", " ").\
                                                             replace("(", " ").\
                                                             replace(")", " ").\
@@ -181,6 +184,7 @@ def idf(words, which):
                                                             replace("=", " ").\
                                                             replace("{", " ").\
                                                             replace("}", " ").\
+                                                            replace("~", " ").\
                                                             encode('utf-8').\
                                                             lower()))
     # STEPS in idfCalc:
@@ -245,7 +249,7 @@ if __name__ == '__main__':
 
     rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv', use_unicode = True).map(lambda x: x.split("\t")).filter(lambda x: x[1] != '')
 
-    fsListings = sc.textFile(folderPath+'listings_us.csv', use_unicode = True)
+    fsListings = sc.textFile(folderPath+'listings_us.csv')
 
     listingHeader = fsListings.first()
     listingsFiltered = fsListings.filter(lambda x: x!=listingHeader).map(lambda x: x.split("\t"))
@@ -267,7 +271,7 @@ if __name__ == '__main__':
 
     # rdd where all the descriptions of the listings in a neighborhood, are concatenated into one. 
     # Key = neighborhood, value = description
-    reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKey(add)
+    reducedNeighbourhoodRDD = joinedRDD.map(lambda x: (x[1][0], x[1][1])).reduceByKey(lambda x,y: x+ " " + y)
 
     # rdd linking listingID and description
     # Key = 
