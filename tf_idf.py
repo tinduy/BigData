@@ -1,3 +1,4 @@
+# coding: utf-8
 from __future__ import print_function
 from pyspark import SparkContext, SparkConf
 from operator import add
@@ -66,13 +67,15 @@ def heyListen(id):
                                     replace("*", " ").\
                                     replace(".", " ").\
                                     replace("-", " ").\
-                                    replace("—", " ").\
+                                    replace("—".decode('utf-8'), " ").\
+                                    replace("–".decode('utf-8'), " ").\
                                     replace("!", " ").\
                                     replace("?", " ").\
                                     replace("+", " ").\
                                     replace("/", " ").\
                                     replace("\'", " ").\
                                     replace("\"", " ").\
+                                    replace("“".decode('utf-8'), " ").\
                                     replace("\\", " ").\
                                     replace("=", " ").\
                                     replace("{", " ").\
@@ -90,13 +93,15 @@ def heyNeighbor(neighborhood):
                                                     replace("*", " ").\
                                                     replace(".", " ").\
                                                     replace("-", " ").\
-                                                    replace("—", " ").\
+                                                    replace("—".decode('utf-8'), " ").\
+                                                    replace("–".decode('utf-8'), " ").\
                                                     replace("!", " ").\
                                                     replace("?", " ").\
                                                     replace("+", " ").\
                                                     replace("/", " ").\
                                                     replace("\'", " ").\
                                                     replace("\"", " ").\
+                                                    replace("“".decode('utf-8'), " ").\
                                                     replace("\\", " ").\
                                                     replace("=", " ").\
                                                     replace("{", " ").\
@@ -138,7 +143,8 @@ def idf(words, which):
                                     replace("*", "").\
                                     replace(".", " ").\
                                     replace("-", " ").\
-                                    replace("—", " ").\
+                                    replace("—".decode('utf-8'), " ").\
+                                    replace("–".decode('utf-8'), " ").\
                                     replace("!", " ").\
                                     replace("?", " ").\
                                     replace("+", " ").\
@@ -146,6 +152,7 @@ def idf(words, which):
                                     replace("\\", " ").\
                                     replace("\'", " ").\
                                     replace("\"", " ").\
+                                    replace("“".decode('utf-8'), " ").\
                                     replace("=", " ").\
                                     replace("{", " ").\
                                     replace("}", " ").\
@@ -161,7 +168,8 @@ def idf(words, which):
                                                             replace(".", " ").\
                                                             replace(";", " ").\
                                                             replace("-", " ").\
-                                                            replace("—", " ").\
+                                                            replace("—".decode('utf-8'), " ").\
+                                                            replace("–".decode('utf-8'), " ").\
                                                             replace("!", " ").\
                                                             replace("?", " ").\
                                                             replace("+", " ").\
@@ -169,6 +177,7 @@ def idf(words, which):
                                                             replace("\\", " ").\
                                                             replace("\'", " ").\
                                                             replace("\"", " ").\
+                                                            replace("“".decode('utf-8'), " ").\
                                                             replace("=", " ").\
                                                             replace("{", " ").\
                                                             replace("}", " ").\
