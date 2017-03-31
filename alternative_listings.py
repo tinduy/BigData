@@ -25,50 +25,60 @@ fsCalendar = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/calendar_us
 calendarHeader = fsCalendar.first()
 calendarFiltered = fsCalendar.filter(lambda x: x!=calendarHeader).map(lambda x: x.split("\t"))
 
+# Maps index name to column index for listings_us.csv
+# getIndexValue then uses the key (column name) to access right column index
 header2 = fsListings.first().split("\t")
 dict = {}
 for i in range(len(header2)):
     dict[header2[i]] = i
 
-# getIndexValue then uses the key (column name) to access right column index.
+# getIndexValue then uses the key (column name) to access right column index
 def getIndexValue(name):
     return dict[name]
 
-listingColumns = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("room_type")], \
-                            float(x[getIndexValue("price")].replace("$", "").replace(",", "")), \
-                            float(x[getIndexValue("longitude")]), float(x[getIndexValue("latitude")]), \
+listingColumns = listingsFiltered.map(lambda x: (x[getIndexValue("id")], x[getIndexValue("room_type")],\
+                            float(x[getIndexValue("price")].replace("$", "").replace(",", "")),\
+                            float(x[getIndexValue("longitude")]), float(x[getIndexValue("latitude")]),\
                                   x[getIndexValue("amenities")], x[getIndexValue("name")]))
-#print(listingColumns.take(10))
 
 def alternativeListings(listingID, date, pricePercentage, y, n):
     start_time = time()
-    #filterAvailable = calendarFiltered.filter(lambda line: date == line[1]).filter(lambda line: line[2] == 't').map(lambda x: (x[0], x[2]))
-    #roomType = listingColumns.map(lambda x: (x[0], x[1]))
-    #joinRDD = filterAvailable.join(roomType)
-    #listingRoomType = getRoomType(listingID)
-    #roomTypeRDD = joinRDD.filter(lambda line: line[1][1] == listingRoomType)
-    #priceRDD = roomTypeRDD.map(lambda x: (x[0], x[1][1])).join(listingColumns.map(lambda x: (x[0], x[2])))
-    #maxPriceForListing = float(float(listingColumns.filter(lambda line: listingID == line[0]).map(lambda x: x[2]).collect()[0]) * float(pricePercentage))
-    #checkPrice = priceRDD.filter(lambda x: x[1][1] < maxPriceForListing)
-    #longLat = checkPrice.map(lambda x: (x[0], x[1][1])).\
-     #                   join(listingColumns.map(lambda x: (x[0], x[3]))).\
-      #                  map(lambda x: (x[0], x[1][1])).\
-       #                 join(listingColumns.map(lambda x: (x[0], x[4])))
-    #longLat.map(lambda x: (x[0], x[1][0], x[1][1])).toDF().coalesce(1).write.csv('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/longLat.csv')
-    longLatFiltered = sc.textFile('/usr/local/spark/spark-2.1.0-bin-hadoop2.7/longLat.csv', use_unicode = False).map(lambda x: x.split(","))
+    # Filter out the available listings on date
+    filterAvailable = calendarFiltered.filter(lambda line: date == line[1]).filter(lambda line: line[2] == 't').map(lambda x: (x[0], x[2]))
+    roomType = listingColumns.map(lambda x: (x[0], x[1]))
+    joinRDD = filterAvailable.join(roomType)
+    listingRoomType = getRoomType(listingID)
+    # Filter out the listings with same room type as listingID
+    roomTypeRDD = joinRDD.filter(lambda line: line[1][1] == listingRoomType)
+    priceRDD = roomTypeRDD.map(lambda x: (x[0], x[1][1])).join(listingColumns.map(lambda x: (x[0], x[2])))
+    # Calculate the maximum price for the listings
+    maxPriceForListing = float(float(listingColumns.filter(lambda line: listingID == line[0]).\
+                                     map(lambda x: x[2]).collect()[0]) * float(pricePercentage))
+    # Filter out the remaining listings with price less than the maximum price
+    checkPrice = priceRDD.filter(lambda x: x[1][1] < maxPriceForListing)
+    longLat = checkPrice.map(lambda x: (x[0], x[1][1])).\
+                        join(listingColumns.map(lambda x: (x[0], x[3]))).\
+                        map(lambda x: (x[0], x[1][1])).\
+                        join(listingColumns.map(lambda x: (x[0], x[4])))
+    # Get the coordinates from the original listing (listingID)
     listingCoordinates = listingColumns.map(lambda x: (x[0], float(x[3]), float(x[4]))).filter(lambda id: listingID in id)
     long = listingCoordinates.map(lambda x: x[1]).collect()[0]
     lat = listingCoordinates.map(lambda x: x[2]).collect()[0]
-    distanceCalculation = longLatFiltered.map(lambda x: (x[0], haversine(float(x[2]), float(x[1]), float(lat), float(long))))
+    # Calculate the distances between coordinates by using the function haversine()
+    distanceCalculation = longLat.map(lambda x: (x[0], x[1][0], x[1][1])).\
+                                map(lambda x: (x[0], haversine(float(x[2]), float(x[1]), float(lat), float(long))))
+    # Filter out the listings that are less than y km away from listingID
     filterDistance = distanceCalculation.filter(lambda x: x[1] < float(y))
+    # Get the amenities for original listingID
     amenitiesListing = listingColumns.map(lambda x: (x[0], x[5])).\
                                     filter(lambda id: listingID == id[0]).\
                                     map(lambda x: x[1].replace("{", "").replace("}", "").\
                                     replace("\"", "").lower().strip().split(",")).collect()[0]
-    #print(amenitiesListing)
+    # Get the amenities for the remaining listings
     listAmenities = filterDistance.join(listingColumns.map(lambda x: (x[0], x[5]))).\
                                                     map(lambda x: (x[0], x[1][1].replace("{", "").replace("}", "").\
                                                     replace("\"", "").lower().strip().split(",")))
+    # Check amenities up against the amenities list from listingID
     checkAmenities = listAmenities.flatMapValues(lambda x: x).\
                                     filter(lambda x: x[1] in amenitiesListing).\
                                     map(lambda x: (x[0], int(1))).\
@@ -81,27 +91,30 @@ def alternativeListings(listingID, date, pricePercentage, y, n):
     listId = sc.parallelize(checkAmenities).map(lambda x: x[0]).collect()
     amenities = sc.parallelize(checkAmenities).collectAsMap()
     distance = filterDistance.collectAsMap()
+    # Output listings into file called alternatives.tsv
     fileMaker = listingColumns.filter(lambda id: id[0] in listId).map(lambda x: (x[0], x[6],\
                                                         amenities[x[0]], distance[x[0]], x[2])).\
                                                         map(lambda x: (x[2], x[0], x[1], x[3], x[4])).\
                                                         sortByKey(0,1).\
                                                         map(lambda x: (x[1], x[2], x[0], x[3], x[4]))
-    #print(fileMaker.collect())
     #fileMaker.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile("/usr/local/spark/spark-2.1.0-bin-hadoop2.7/alternatives.tsv")
     print("Checking listing Elapsed time: " + str(time() - start_time))
+    #Make file for CARTO vizualisation
     cartoMaker = listingColumns.filter(lambda id: id[0] in listId).map(lambda x: (x[0], x[6],\
                                                         amenities[x[0]], distance[x[0]], x[2], x[3], x[4])).\
                                                         map(lambda x: (x[2], x[0], x[1], x[3], x[4], x[5], x[6])).\
                                                         sortByKey(0, 1).\
                                                         map(lambda x: (x[1], x[2], x[0], x[3], x[4], x[5], x[6]))
+    # Original listingID columns needed
     listingMaker = listingColumns.filter(lambda id: listingID in id).map(lambda x: (x[0], x[6], 0, 0, x[2], x[3], x[4]))
-    print(listingMaker.collect())
     #cartoMaker.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile("/usr/local/spark/spark-2.1.0-bin-hadoop2.7/cartoAlternatives.tsv")
 
+# Get room type for listingID
 def getRoomType(listingID):
     room_type = listingColumns.map(lambda x: (x[0],x[1])).filter(lambda id: listingID in id).map(lambda x: x[1]).collect()
     return room_type[0]
 
+# Calculate distances between coordinates
 def haversine(lat1, lon1, lat2, lon2):
     # convert decimal degrees to radians
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
@@ -121,7 +134,7 @@ def haversine(lat1, lon1, lat2, lon2):
 #               y = radius y km
 #               n = output top n listings with common amenities as <listingID>
 #   Example:
-#   alternative_listings.py 15359479 2016-12-15 10 2 20
+#   alternative_listings.py 4717459 2017-05-28 10 1 50
 def parametersPassing(args):
     listingID = args[1]
     date = args[2]    
