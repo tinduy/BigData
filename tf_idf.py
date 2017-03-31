@@ -60,19 +60,22 @@ def flagPassing(args):
 # filter for listing id
 def heyListen(id):
     idRDD = reducedListingRDD.filter(lambda line: id in line).map(lambda x: (x[0], x[1].\
-                                    replace(",","").\
-                                    replace("(","").\
-                                    replace(")","").\
-                                    replace("*", "").\
+                                    replace(","," ").\
+                                    replace("("," ").\
+                                    replace(")"," ").\
+                                    replace("*", " ").\
                                     replace(".", " ").\
-                                    replace("-", "").\
-                                    replace("!", "").\
-                                    replace("+", "").\
+                                    replace("-", " ").\
+                                    replace("!", " ").\
+                                    replace("?", " ").\
+                                    replace("+", " ").\
                                     replace("/", " ").\
+                                    replace("\'", " ").\
+                                    replace("\"", " ").\
                                     replace("\\", " ").\
-                                    replace("=", "").\
-                                    replace("{", "").\
-                                    replace("}", "").\
+                                    replace("=", " ").\
+                                    replace("{", " ").\
+                                    replace("}", " ").\
                                     encode('utf-8').\
                                     lower()))
     return idRDD
@@ -80,19 +83,23 @@ def heyListen(id):
 # filter for neighborhood
 def heyNeighbor(neighborhood):
     neighborhoodRDD = reducedNeighbourhoodRDD.filter(lambda line: neighborhood in line).map(lambda x: (x[0], x[1].\
-                                                    replace(",", "").\
-                                                    replace("(", "").\
-                                                    replace(")", "").\
-                                                    replace("*", "").\
+                                                    replace(",", " ").\
+                                                    replace("(", " ").\
+                                                    replace(")", " ").\
+                                                    replace("*", " ").\
                                                     replace(".", " ").\
-                                                    replace("-", "").\
-                                                    replace("!", "").\
-                                                    replace("+", "").\
+                                                    replace("-", " ").\
+      #                                              replace("—", " ").\
+                                                    replace("!", " ").\
+                                                    replace("?", " ").\
+                                                    replace("+", " ").\
                                                     replace("/", " ").\
+                                                    replace("\'", " ").\
+                                                    replace("\"", " ").\
                                                     replace("\\", " ").\
-                                                    replace("=", "").\
-                                                    replace("{", "").\
-                                                    replace("}", "").\
+                                                    replace("=", " ").\
+                                                    replace("{", " ").\
+                                                    replace("}", " ").\
                                                     encode('utf-8').\
                                                     lower()))
     return neighborhoodRDD
@@ -130,11 +137,13 @@ def idf(words, which):
                                     replace("*", "").\
                                     replace(".", " ").\
                                     replace("-", " ").\
-                                    replace("!", "").\
+                                    replace("!", " ").\
+                                    replace("?", " ").\
                                     replace("+", " ").\
                                     replace("/", " ").\
                                     replace("\\", " ").\
-                                    replace("'s", " ").\
+                                    replace("\'", " ").\
+                                    replace("\"", " ").\
                                     replace("=", " ").\
                                     replace("{", " ").\
                                     replace("}", " ").\
@@ -148,12 +157,15 @@ def idf(words, which):
                                                             replace(")", " ").\
                                                             replace("*", " ").\
                                                             replace(".", " ").\
+                                                            replace(";", " ").\
                                                             replace("-", " ").\
                                                             replace("!", " ").\
+                                                            replace("?", " ").\
                                                             replace("+", " ").\
                                                             replace("/", " ").\
                                                             replace("\\", " ").\
-                                                            replace("'s", " ").\
+                                                            replace("\'", " ").\
+                                                            replace("\"", " ").\
                                                             replace("=", " ").\
                                                             replace("{", " ").\
                                                             replace("}", " ").\
@@ -172,7 +184,7 @@ def idf(words, which):
                 map(lambda x: (x[1], x[0]))
     takeHundred = sc.parallelize(joinRDD.take(100))
     #Write to file
-    takeHundred.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile(folderPath+"tf_idf_results.tsv")
+    takeHundred.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile(folderPath+"tf_idf_results_n.tsv")
 
 
 
