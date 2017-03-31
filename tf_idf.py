@@ -1,4 +1,5 @@
 # coding: utf-8
+# spark-submit tf_idf.py /usr/local/spark/spark-2.1.0-bin-hadoop2.7 -n 'Fremont'
 from __future__ import print_function
 from pyspark import SparkContext, SparkConf
 from operator import add
@@ -125,7 +126,6 @@ def tf(table):
         map(lambda x: (x, int(1))).\
         reduceByKey(add)
     numberOfTermsInDocument = tfTable.count()
-    print(numberOfTermsInDocument)
     # Number of times term t appears in a document d
     # divided by
     # Total number of terms in the document d
@@ -183,6 +183,11 @@ def idf(words, which):
                                                             replace("}", " ").\
                                                             encode('utf-8').\
                                                             lower()))
+    # STEPS in idfCalc:
+    #   create (neighborhood, term) tuple 
+    #   ignore multiple terms in same documents 
+    #   count number documents term t occurs in whole corpus
+    #   calculate term frequency
     idfCalc = listingDesc.map(lambda x: (x[0], x[1].strip().split())).\
                                     flatMapValues(lambda x: x).\
                                     distinct().\
@@ -238,7 +243,7 @@ if __name__ == '__main__':
     main()
     '''    ------------------ Files and paths  ---------------------	 '''
 
-    rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv', use_unicode = True).map(lambda x: x.split("\t"))
+    rddNeighbourID = sc.textFile(folderPath+'listings_ids_with_neighborhoods.tsv', use_unicode = True).map(lambda x: x.split("\t")).filter(lambda x: x[1] != '')
 
     fsListings = sc.textFile(folderPath+'listings_us.csv', use_unicode = True)
 
