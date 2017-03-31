@@ -8,7 +8,7 @@ import os
 import operator
 from time import time
 
-sc = SparkContext("local", "TF-IDF: Data analysis with Spark")
+sc = SparkContext("local[4]", "TF-IDF: Data analysis with Spark")
 sc.setLogLevel("ERROR")
 
 # full path to the folder with the datasets
