@@ -170,9 +170,9 @@ def idf(words, which):
                 map(lambda x: (x[1], x[0])).\
                 sortByKey(0,1).\
                 map(lambda x: (x[1], x[0]))
-    print(joinRDD.take(100))
+    takeHundred = sc.parallelize(joinRDD.take(100))
     #Write to file
-    joinRDD.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile(folderPath+"tf_idf_results.tsv")
+    takeHundred.map(lambda x: "\t".join(map(str, x))).coalesce(1).saveAsTextFile(folderPath+"tf_idf_results.tsv")
 
 
 
@@ -197,7 +197,6 @@ def idf(words, which):
 
 def main():
     global folderPath
-    print ("Hello, world!")
     # Skeleton code for standalone application
     '''
         # accepts a full path to the folder with the datasets,
