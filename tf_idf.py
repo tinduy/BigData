@@ -66,6 +66,7 @@ def heyListen(id):
                                     replace("*", " ").\
                                     replace(".", " ").\
                                     replace("-", " ").\
+                                    replace("—", " ").\
                                     replace("!", " ").\
                                     replace("?", " ").\
                                     replace("+", " ").\
@@ -89,7 +90,7 @@ def heyNeighbor(neighborhood):
                                                     replace("*", " ").\
                                                     replace(".", " ").\
                                                     replace("-", " ").\
-      #                                              replace("—", " ").\
+                                                    replace("—", " ").\
                                                     replace("!", " ").\
                                                     replace("?", " ").\
                                                     replace("+", " ").\
@@ -137,6 +138,7 @@ def idf(words, which):
                                     replace("*", "").\
                                     replace(".", " ").\
                                     replace("-", " ").\
+                                    replace("—", " ").\
                                     replace("!", " ").\
                                     replace("?", " ").\
                                     replace("+", " ").\
@@ -159,6 +161,7 @@ def idf(words, which):
                                                             replace(".", " ").\
                                                             replace(";", " ").\
                                                             replace("-", " ").\
+                                                            replace("—", " ").\
                                                             replace("!", " ").\
                                                             replace("?", " ").\
                                                             replace("+", " ").\
